@@ -18,6 +18,7 @@ Este proyecto la reemplaza con Python y la API del BCRA. Más adelante va a alim
 | `bcra_api.py` | Cliente genérico de las APIs del BCRA (monetarias v4.0 y cambiarias v1.0), con paginación y reintentos. **Es reutilizable para otros informes; no meterle lógica específica de este informe.** |
 | `paralelos.py` | MEP, CCL, blue, tarjeta y cripto. Histórico desde ArgentinaDatos; en vivo desde DolarApi. |
 | `reservas_netas.py` | Replica la hoja RRII: netas metodología FMI, ex BOPREAL, ex depósitos del Tesoro, sin EFF a precios TMU, líquidas, metas RIN y controles. |
+| `internacionales.py` | DXY desde Yahoo Finance (DX-Y.NYB; no oficial: si falla, avisa y deja la serie vacía). El real sale del BCRA (`BRL` en `MONEDAS`). |
 | `actualizar_base.py` | Script principal. Arma `data/base_diaria.csv/.xlsx` (equivale a la hoja BASE + netas), `data/reservas_netas.csv` y `data/ultimo_dato.json`. |
 | `insumos_reservas_netas.xlsx` | Lo carga Bruno a mano: pasivos que no están en la API (BOPREAL, REPOs+SEDESA, organismos, swap USA, BIS, stock DEG) y parámetros. |
 | `tablero.py` | Lee `data/` (no llama APIs), arma el JSON del tablero y lo inserta en la plantilla → `docs/index.html`. |
@@ -25,7 +26,7 @@ Este proyecto la reemplaza con Python y la API del BCRA. Más adelante va a alim
 
 Para correrlo: `pip install pandas requests openpyxl` y después `python actualizar_base.py` (tarda ~1 minuto) y `python tablero.py`.
 
-Para previsualizar el tablero en Claude Code: servidor `tablero` en `../.claude/launch.json` (http.server sobre `docs/`, puerto 8765).
+Para previsualizar el tablero en Claude Code: servidor `tablero` en `.claude/launch.json` (http.server sobre `docs/`, puerto 8765).
 
 ### Validación hecha
 
@@ -76,6 +77,15 @@ AJ control_super   = AI − dep. Tesoro − bopreal
    - **Pendiente:** Bruno tiene que verificar ambos valores contra el balance del BCRA.
 6. **Histórico:** las netas se calculan desde 2024. Antes de esa fecha, si hace falta, tomar los valores congelados de la hoja RRII original. No intentar replicar fórmulas viejas.
 
+## Repositorio y publicación (desde el 18/11/2026)
+
+- **Repo:** https://github.com/Brunopintor/monitor_externo_ARGY (público). Rama `main`.
+- **Tablero publicado:** https://brunopintor.github.io/monitor_externo_ARGY/ (GitHub Pages sobre `main` / `docs`).
+- **Carpeta de trabajo:** `C:\Users\bruno\proyectos\monitor_externo_ARGY`. Se sacó de Google Drive porque un repo de git adentro de una carpeta sincronizada da problemas. La carpeta `Automatizacion` de Drive quedó como copia vieja; no se trabaja más ahí.
+- **Git:** autor "Bruno Pintor" con el email privado de GitHub (`91093548+Brunopintor@users.noreply.github.com`), configurado sólo en este repo. `gh` está instalado y logueado (cuenta Brunopintor).
+- **`.gitignore`:** deja afuera `data/base_diaria.xlsx` (binario, se regenera) y `desktop.ini`.
+- **Para publicar a mano:** `python actualizar_base.py`, `python tablero.py`, y después commit y push de `data/` y `docs/`.
+
 ## Tablero (hecho el 18/11/2026)
 
 Decisiones de Bruno, no revertir sin consultar:
@@ -83,6 +93,7 @@ Decisiones de Bruno, no revertir sin consultar:
 - **Público:** el equipo del Ministerio, pero puede ser público en GitHub Pages (todo es información pública). Además va a ir a su portafolio/CV, así que tiene que verse prolijo.
 - **Librería:** ECharts (Bruno no va a tocar los gráficos a mano).
 - **Fuente:** Aptos si está instalada; si no, Inter (Google Fonts), que es la más parecida.
+- **Pestañas:** Resumen (KPIs agrupados: dólar en la Argentina, dólar en el mundo —DXY y real— y reservas, con variación del día, del mes y minicurva de 3 meses), Dólares y Reservas. Cada una tiene su ancla (`#resumen`, `#dolares`, `#reservas`) y sus gráficos se dibujan al abrirla.
 - **Gráficos:**
   - Tipos de cambio (A3500, MEP, CCL, blue; minorista, tarjeta y cripto se prenden desde la leyenda) con la banda sombreada. **Por defecto, últimos 4 años.** Al costado, una tablita con la variación del día y del mes de cada dólar.
   - Brechas MEP, CCL y blue contra el A3500 (4 años por defecto).
@@ -98,14 +109,13 @@ Decisiones de Bruno, no revertir sin consultar:
 
 ## Próximos pasos (en este orden)
 
-1. **Publicar en GitHub** (pendiente): Bruno quiere conectarlo a su cuenta de GitHub. `git` está instalado; `gh` no.
-2. **Automatización diaria:** con GitHub Actions (cron hábil ~19 h ART), que corre `actualizar_base.py` y `tablero.py`, commitea `data/` y publica `docs/` en GitHub Pages.
+1. **Automatización diaria:** con GitHub Actions (cron hábil ~19 h ART), que corre `actualizar_base.py` y `tablero.py`, commitea `data/` y publica `docs/` en GitHub Pages.
    - `insumos_reservas_netas.xlsx` vive en el repo; Bruno lo edita y hace push.
    - Alternativa: Programador de tareas de Windows.
-3. **Tests mínimos** (pytest):
+2. **Tests mínimos** (pytest):
    - Que el catálogo de la API siga teniendo los ids usados.
    - Que `reservas_netas` reproduzca un día conocido. Por ejemplo, 2026-11-05: brutas 49.586 y netas_fmi 8.453,31.
-4. Opcional, más adelante: portar otras hojas del Excel (TCRM, PIES, Efectivo Mínimo).
+3. Opcional, más adelante: portar otras hojas del Excel (TCRM, PIES, Efectivo Mínimo).
 
 ## Cuidados
 
