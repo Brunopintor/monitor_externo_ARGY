@@ -1,3 +1,4 @@
-pandas
-requests
-openpyxl
+# Rangos acotados para que una versión mayor nueva no rompa la corrida diaria.
+pandas>=3.0,<4
+requests>=2.32,<3
+openpyxl>=3.1,<4

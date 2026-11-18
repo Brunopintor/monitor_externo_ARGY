@@ -86,6 +86,18 @@ AJ control_super   = AI − dep. Tesoro − bopreal
 - **`.gitignore`:** deja afuera `data/base_diaria.xlsx` (binario, se regenera) y `desktop.ini`.
 - **Para publicar a mano:** `python actualizar_base.py`, `python tablero.py`, y después commit y push de `data/` y `docs/`.
 
+## Actualización diaria (andando desde el 18/11/2026)
+
+- **Workflow:** `.github/workflows/actualizar.yml`. Corre de lunes a viernes a las 22:00 UTC (19:00 ART) y también a mano (Actions → "Actualizar tablero" → Run workflow, o `gh workflow run actualizar.yml`).
+- **Pasos:** instala `requirements.txt`, corre `actualizar_base.py` y `tablero.py`, commitea `data/` y `docs/` como github-actions[bot] ("Datos al AAAA-MM-DD") y publica `docs/` con `actions/deploy-pages`.
+- **Pages se publica desde Actions** (`build_type = workflow`), no desde la rama: así se publica en la misma corrida.
+- **Probado el 18/11/2026:** tardó ~4,5 min (la base, ~3,5 min). Desde GitHub la API del BCRA anduvo sin problemas de certificados y Yahoo respondió.
+- **Antes de trabajar local:** hacer `git pull`, porque el bot commitea `data/` y `docs/` todos los días.
+- **`insumos_reservas_netas.xlsx`:** Bruno lo edita en esta carpeta, hace commit y push, y entra en la próxima corrida; para verlo antes, se corre el workflow a mano.
+- **Dependencias:** `requirements.txt` con rangos acotados (`pandas>=3,<4`, etc.) para que una versión mayor nueva no rompa la corrida.
+- **Si falla una corrida:** GitHub le manda un mail a Bruno. Lo más probable es una caída de la API del BCRA o de ArgentinaDatos; se reintenta a mano. Si el DXY falla, la corrida no se corta: avisa y deja la serie vacía.
+- **Avisos pendientes de GitHub** (no frenan nada): las actions v4/v5 usan Node 20, que está deprecado, y `ubuntu-latest` pasa a Ubuntu 26. Cuando salgan versiones nuevas de las actions, subirlas.
+
 ## Tablero (hecho el 18/11/2026)
 
 Decisiones de Bruno, no revertir sin consultar:
@@ -109,13 +121,10 @@ Decisiones de Bruno, no revertir sin consultar:
 
 ## Próximos pasos (en este orden)
 
-1. **Automatización diaria:** con GitHub Actions (cron hábil ~19 h ART), que corre `actualizar_base.py` y `tablero.py`, commitea `data/` y publica `docs/` en GitHub Pages.
-   - `insumos_reservas_netas.xlsx` vive en el repo; Bruno lo edita y hace push.
-   - Alternativa: Programador de tareas de Windows.
-2. **Tests mínimos** (pytest):
+1. **Tests mínimos** (pytest), que se podrían correr también en el workflow antes de publicar:
    - Que el catálogo de la API siga teniendo los ids usados.
    - Que `reservas_netas` reproduzca un día conocido. Por ejemplo, 2026-11-05: brutas 49.586 y netas_fmi 8.453,31.
-3. Opcional, más adelante: portar otras hojas del Excel (TCRM, PIES, Efectivo Mínimo).
+2. Opcional, más adelante: portar otras hojas del Excel (TCRM, PIES, Efectivo Mínimo).
 
 ## Cuidados
 

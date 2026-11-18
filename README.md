@@ -131,10 +131,12 @@ Siguen siendo carga manual los pasivos: el swap con China, el BOPREAL, los REPOs
 
 **Hojas analíticas.** Hojas como TCRM, PIES, Esquema IMPO y FMI-pagos quedan fuera de este primer paso.
 
-## Próximos pasos
+## Actualización diaria
 
-1. Sumar `pasivos.csv` y el cálculo de reservas netas con la metodología FMI.
-2. Armar el tablero HTML: tipo de cambio dentro de la banda, brechas, reservas y su variación diaria.
-3. Programar la corrida diaria. Hay dos opciones:
-   - GitHub Actions + GitHub Pages: el tablero queda online, con link, y no depende de tu PC.
-   - Programador de tareas de Windows: corre en tu PC y escribe en esta carpeta de Drive.
+El tablero se publica en **https://brunopintor.github.io/monitor_externo_ARGY/** y se actualiza solo
+de lunes a viernes a las 19:00 (hora argentina) con GitHub Actions (`.github/workflows/actualizar.yml`):
+baja los datos, arma el tablero, commitea `data/` y `docs/` y publica en GitHub Pages.
+
+- Para correrlo en el momento: pestaña **Actions** del repo → *Actualizar tablero* → **Run workflow**.
+- Para cambiar los insumos manuales: editar `insumos_reservas_netas.xlsx`, commit y push.
+- Antes de tocar algo en la PC: `git pull` (el bot sube datos nuevos todos los días).

@@ -81,7 +81,7 @@ def construir(desde: str = "2003-01-01") -> pd.DataFrame:
     # El día de hoy queda aunque el BCRA todavía no haya publicado el A3500.
     ult_a3500 = df["a3500"].last_valid_index()
     feriado = df["a3500"].isna() & (df.index <= ult_a3500)
-    df = df[(df.index.dayofweek < 5) & ~feriado]
+    df = df[(df.index.day_of_week < 5) & ~feriado]
     df.index.name = "fecha"
 
     # ---- Derivadas
