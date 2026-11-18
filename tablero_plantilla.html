@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tipo de cambio y reservas</title>
+<meta name="author" content="Bruno Pintor">
 <meta name="description" content="Tablero diario de tipos de cambio, brechas, banda cambiaria y reservas internacionales del BCRA.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -120,6 +121,10 @@ td .fecha { display: block; color: var(--muted); font-size: 11px; }
 .tabla-dolares { padding-top: 34px; }
 .tabla-dolares .pie-tabla { color: var(--muted); font-size: 11.5px; margin-top: 8px; }
 
+.nota-graf { color: var(--muted); font-size: 12px; margin: 4px 0 8px; }
+.nota-graf:empty { display: none; }
+.firma { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.firma strong { color: var(--ink-2); font-weight: 600; }
 footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--grid); padding-top: 16px; }
 footer p { margin: 0 0 6px; }
 footer a { color: var(--ink-2); }
@@ -147,7 +152,7 @@ footer a { color: var(--ink-2); }
       <h1>Tipo de cambio y reservas</h1>
       <p class="bajada">Dólares, brechas, banda cambiaria y reservas internacionales del BCRA</p>
     </div>
-    <div class="actualizado" id="actualizado"></div>
+    <div class="actualizado"><div id="actualizado"></div><div>Por <a href="https://www.linkedin.com/in/bruno-pintor-ab7438131/" target="_blank" rel="noopener" style="color:inherit">Bruno Pintor</a></div></div>
   </header>
 
   <nav class="pestanas" role="tablist" aria-label="Secciones">
@@ -176,7 +181,6 @@ footer a { color: var(--ink-2); }
           <thead><tr><th>Dólar</th><th>Último</th><th>Día</th><th>Mes</th></tr></thead>
           <tbody></tbody>
         </table>
-        <p class="pie-tabla">Día: contra el dato hábil anterior. Mes: contra el último dato de un mes antes.</p>
       </div>
     </div>
   </div>
@@ -187,6 +191,7 @@ footer a { color: var(--ink-2); }
       <div class="controles" data-grafico="brechas"></div>
     </div>
     <div class="grafico bajo" id="g-brechas" role="img" aria-label="Brechas cambiarias del MEP, CCL y blue"></div>
+    <p class="nota-graf">Brecha = dólar / A3500 − 1.</p>
   </div>
   </section>
 
@@ -198,6 +203,7 @@ footer a { color: var(--ink-2); }
       <div class="controles" data-grafico="reservas"></div>
     </div>
     <div class="grafico" id="g-reservas" role="img" aria-label="Reservas brutas y netas"></div>
+    <p class="nota-graf">Netas (metodología FMI) = brutas − exceso de DEG − swap China − BIS − encajes en USD − swap EE.UU. − organismos − REPOs (incl. SEDESA). Ex BOPREAL resta además el stock de BOPREAL; ex Tesoro, los depósitos del Tesoro en moneda extranjera.</p>
   </div>
 
   <div class="dos" style="margin-top:12px">
@@ -208,16 +214,17 @@ footer a { color: var(--ink-2); }
     <div class="tarjeta">
       <div class="cab"><h3 id="t-comp">De brutas a netas</h3></div>
       <div class="grafico bajo" id="g-comp" role="img" aria-label="Composición de reservas brutas a netas"></div>
+      <p class="nota-graf" id="nota-comp"></p>
     </div>
   </div>
   </section>
 
   <footer>
-    <p><strong>Fuentes:</strong> BCRA (API de estadísticas monetarias y cambiarias) para el A3500, el minorista, la banda, el real, las reservas y sus factores de variación; ArgentinaDatos y DolarApi para MEP, CCL, blue, tarjeta y cripto (precio de venta); Yahoo Finance para el DXY (ICE).</p>
-    <p><strong>Variaciones:</strong> "día" es contra el dato hábil anterior; "mes", contra el último dato de un mes antes. Brecha y posición en la banda varían en puntos porcentuales; reservas, en millones de USD.</p>
-    <p><strong>Reservas netas:</strong> metodología FMI = brutas − exceso de DEG − swap China − BIS − encajes en USD − swap EE.UU. − organismos − REPOs (incl. SEDESA). Ex BOPREAL resta además el stock de BOPREAL; ex Tesoro, los depósitos del Tesoro en moneda extranjera.</p>
-    <p><strong>Brecha:</strong> dólar / A3500 − 1. <strong>Posición en la banda:</strong> (A3500 − piso) / (techo − piso).</p>
-    <p id="nota-pie"></p>
+    <p class="firma"><span>Elaborado por <strong>Bruno Pintor</strong></span>
+      <a href="https://x.com/PintorBruno" target="_blank" rel="noopener">X / Twitter</a>
+      <a href="https://www.linkedin.com/in/bruno-pintor-ab7438131/" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/Brunopintor/monitor_externo_ARGY" target="_blank" rel="noopener">Código en GitHub</a></p>
+    <p>Fuente: BCRA, ArgentinaDatos, DolarApi y Yahoo Finance.</p>
   </footer>
 </div>
 
@@ -548,8 +555,8 @@ function graficoComposicion() {
              { nombre: "Dep. Tesoro", valor: c.tesoro },
              { nombre: "Netas ex BOPREAL y Tesoro", valor: c.netas_ex_bopreal_tesoro, total: true }]);
   waterfall("comp", "g-comp", pasos, { rotar: true });
-  document.getElementById("nota-pie").textContent = ceros.length
-    ? `En la composición de brutas a netas se omiten los conceptos que hoy dan cero: ${ceros.join(", ").replace(/\.$/, "")}.` : "";
+  document.getElementById("nota-comp").textContent = ceros.length
+    ? `No se muestran los conceptos que hoy dan cero: ${ceros.join(", ").replace(/\.$/, "")}.` : "";
 }
 
 // ---------- Pestañas ----------

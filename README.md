@@ -1,6 +1,16 @@
-# Automatización: tipos de cambio, bandas y reservas
+# Monitor externo de Argentina: tipos de cambio y reservas
 
-Reemplazo automático de la hoja `BASE` de *(2024.03.06) Reservas y tipos de cambio - nuevo.xlsx*.
+Automatización de una base de datos diaria sobre el panorama externo de la Argentina:
+tipos de cambio (oficial, financieros y paralelos), brechas, banda cambiaria, dólar global (DXY),
+real brasileño y reservas internacionales del BCRA, brutas y netas.
+
+Todos los días hábiles, un proceso automático baja los datos de fuentes públicas (BCRA, ArgentinaDatos,
+DolarApi y Yahoo Finance), calcula las variables derivadas (brechas, posición en la banda y reservas netas
+con metodología FMI) y actualiza un tablero online:
+
+**📊 Tablero: https://brunopintor.github.io/monitor_externo_ARGY/**
+
+Autor: **Bruno Pintor** · [X / Twitter](https://x.com/PintorBruno) · [LinkedIn](https://www.linkedin.com/in/bruno-pintor-ab7438131/)
 
 ## Cómo correrlo
 
