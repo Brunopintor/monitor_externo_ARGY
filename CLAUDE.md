@@ -96,9 +96,13 @@ AJ control_super   = AI − dep. Tesoro − bopreal
 - **`insumos_reservas_netas.xlsx`:** Bruno lo edita en esta carpeta, hace commit y push, y entra en la próxima corrida; para verlo antes, se corre el workflow a mano.
 - **Dependencias:** `requirements.txt` con rangos acotados (`pandas>=3,<4`, etc.) para que una versión mayor nueva no rompa la corrida.
 - **Si falla una corrida:** GitHub le manda un mail a Bruno. Lo más probable es una caída de la API del BCRA o de ArgentinaDatos; se reintenta a mano. Si el DXY falla, la corrida no se corta: avisa y deja la serie vacía.
+- **Fuentes vacías:** si una serie viene vacía (Yahoo o una moneda del BCRA), la corrida sigue, imprime `AVISO: vinieron vacías estas series: ...` y el KPI no aparece. Sólo corta con error si faltan `a3500` o `reservas_brutas`. El 18/11/2026 una corrida falló por esto, antes del arreglo; la siguiente anduvo.
 - **Avisos pendientes de GitHub** (no frenan nada): las actions v4/v5 usan Node 20, que está deprecado, y `ubuntu-latest` pasa a Ubuntu 26. Cuando salgan versiones nuevas de las actions, subirlas.
 
 ## Tablero (hecho el 18/11/2026)
+
+- **Autoría:** "Por Bruno Pintor" arriba a la derecha y, en el pie, X (https://x.com/PintorBruno), LinkedIn (https://www.linkedin.com/in/bruno-pintor-ab7438131/) y el repo.
+- **Fuentes y notas:** el pie dice sólo "Fuente: BCRA, ArgentinaDatos, DolarApi y Yahoo Finance". Las aclaraciones van debajo de cada gráfico (brecha, metodología de netas, conceptos en cero en la composición). No se aclara cómo se calculan las variaciones del día y del mes: Bruno lo considera obvio.
 
 Decisiones de Bruno, no revertir sin consultar:
 
