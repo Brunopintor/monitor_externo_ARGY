@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tipo de cambio y reservas</title>
+<meta name="description" content="Tablero diario de tipos de cambio, brechas, banda cambiaria y reservas internacionales del BCRA.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<!--
+  Plantilla del tablero. NO editar docs/index.html: se pisa cada vez que corre tablero.py.
+  tablero.py reemplaza la marca de DATOS (abajo) por el JSON con los datos del día.
+  Fuente: Aptos si está instalada (PCs con Office); si no, Inter, que es la más parecida en la web.
+-->
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --wash: rgba(11,11,11,0.05);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+  --s5: #e87ba4; --s6: #008300; --s7: #6250d6;
+  --sube: #1baf7a; --baja: #e34948;
+  --banda: rgba(82,81,78,0.10);
+  --font: "Aptos", "Inter", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --wash: rgba(255,255,255,0.06);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --s5: #d55181; --s6: #0ca30c; --s7: #9085e9;
+    --sube: #199e70; --baja: #e66767; --banda: rgba(195,194,183,0.10);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --wash: rgba(255,255,255,0.06);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+  --s5: #d55181; --s6: #0ca30c; --s7: #9085e9;
+  --sube: #199e70; --baja: #e66767; --banda: rgba(195,194,183,0.10);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--page); color: var(--ink);
+  font-family: var(--font); font-size: 15px; line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+.contenedor { max-width: 1240px; margin: 0 auto; padding: 28px 24px 48px; }
+header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 8px 24px; margin-bottom: 20px; }
+h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+.bajada { color: var(--ink-2); margin: 4px 0 0; }
+.actualizado { color: var(--muted); font-size: 13px; text-align: right; }
+h2 { font-size: 18px; font-weight: 600; margin: 36px 0 12px; }
+
+/* Pestañas */
+.pestanas { display: flex; gap: 4px; border-bottom: 1px solid var(--grid); margin-bottom: 8px; overflow-x: auto; }
+.pestanas button {
+  font: inherit; font-size: 15px; color: var(--ink-2); background: transparent; border: 0;
+  border-bottom: 2px solid transparent; padding: 10px 14px; margin-bottom: -1px; cursor: pointer; white-space: nowrap;
+}
+.pestanas button:hover { color: var(--ink); }
+.pestanas button[aria-selected="true"] { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
+.panel[hidden] { display: none; }
+
+/* KPIs */
+.grupos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 24px; }
+.grupo.ancho { grid-column: 1 / -1; }
+.grupo h2 { margin-top: 24px; }
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.grupo.ancho .kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+@media (max-width: 1180px) { .grupo.ancho .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px 12px; }
+.kpi .etq { color: var(--ink-2); font-size: 13px; display: flex; justify-content: space-between; gap: 8px; }
+.kpi .etq .fecha { color: var(--muted); font-size: 12px; }
+.kpi .val { font-size: 26px; font-weight: 600; margin-top: 2px; letter-spacing: -0.01em; }
+.kpi .ayuda { color: var(--muted); font-size: 11.5px; margin-top: -2px; min-height: 0; }
+.kpi .vars { display: flex; gap: 14px; font-size: 12.5px; margin-top: 6px; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.kpi .vars span b { color: var(--muted); font-weight: 400; margin-right: 3px; }
+.kpi svg { display: block; width: 100%; height: 34px; margin-top: 8px; overflow: visible; }
+
+/* Tarjetas de gráficos */
+.tarjeta { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 16px 8px; }
+.tarjeta + .tarjeta { margin-top: 12px; }
+.cab { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; margin-bottom: 4px; }
+.cab h3 { font-size: 15px; font-weight: 600; margin: 0; }
+.cab .nota { color: var(--muted); font-size: 12.5px; font-weight: 400; }
+.controles { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.controles button {
+  font: inherit; font-size: 12.5px; color: var(--ink-2); background: transparent;
+  border: 1px solid transparent; border-radius: 6px; padding: 3px 9px; cursor: pointer;
+}
+.controles button:hover { background: var(--wash); }
+.controles button[aria-pressed="true"] { color: var(--ink); border-color: var(--border); background: var(--wash); font-weight: 600; }
+.controles label { font-size: 12.5px; color: var(--ink-2); margin-left: 8px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.grafico { width: 100%; height: 420px; }
+.grafico.bajo { height: 360px; }
+
+.con-tabla { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
+.dos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.dos .tarjeta + .tarjeta { margin-top: 0; }
+
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+th { color: var(--muted); font-weight: 500; font-size: 12px; text-align: right; padding: 6px 4px; border-bottom: 1px solid var(--grid); }
+th:first-child, td:first-child { text-align: left; }
+td { padding: 7px 4px; text-align: right; border-bottom: 1px solid var(--grid); }
+td .fecha { display: block; color: var(--muted); font-size: 11px; }
+.punto { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.tabla-dolares { padding-top: 34px; }
+.tabla-dolares .pie-tabla { color: var(--muted); font-size: 11.5px; margin-top: 8px; }
+
+footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--grid); padding-top: 16px; }
+footer p { margin: 0 0 6px; }
+footer a { color: var(--ink-2); }
+
+@media (max-width: 960px) {
+  .grupos { grid-template-columns: minmax(0, 1fr); }
+  .grupo.ancho .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .con-tabla, .dos { grid-template-columns: minmax(0, 1fr); }
+  .tabla-dolares { padding-top: 0; }
+}
+@media (max-width: 560px) {
+  .contenedor { padding: 20px 16px 40px; }
+  h1 { font-size: 22px; }
+  .actualizado { text-align: left; }
+  .kpi .val { font-size: 22px; }
+  .grafico { height: 340px; }
+  .grafico.bajo { height: 320px; }
+}
+</style>
+</head>
+<body>
+<div class="contenedor">
+  <header>
+    <div>
+      <h1>Tipo de cambio y reservas</h1>
+      <p class="bajada">Dólares, brechas, banda cambiaria y reservas internacionales del BCRA</p>
+    </div>
+    <div class="actualizado" id="actualizado"></div>
+  </header>
+
+  <nav class="pestanas" role="tablist" aria-label="Secciones">
+    <button role="tab" id="tab-resumen" aria-controls="resumen" aria-selected="true">Resumen</button>
+    <button role="tab" id="tab-dolares" aria-controls="dolares" aria-selected="false">Dólares</button>
+    <button role="tab" id="tab-reservas" aria-controls="reservas" aria-selected="false">Reservas</button>
+  </nav>
+
+  <section class="panel" id="resumen" role="tabpanel" aria-labelledby="tab-resumen">
+    <div class="grupos" id="kpis"></div>
+  </section>
+
+  <section class="panel" id="dolares" role="tabpanel" aria-labelledby="tab-dolares" hidden>
+  <h2>Tipos de cambio</h2>
+  <div class="tarjeta">
+    <div class="con-tabla">
+      <div>
+        <div class="cab">
+          <h3>Pesos por dólar <span class="nota">· banda cambiaria sombreada</span></h3>
+          <div class="controles" data-grafico="tc"><label><input type="checkbox" id="tc-log"> Escala log</label></div>
+        </div>
+        <div class="grafico" id="g-tc" role="img" aria-label="Evolución de los tipos de cambio y la banda cambiaria"></div>
+      </div>
+      <div class="tabla-dolares">
+        <table id="tabla-dolares">
+          <thead><tr><th>Dólar</th><th>Último</th><th>Día</th><th>Mes</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="pie-tabla">Día: contra el dato hábil anterior. Mes: contra el último dato de un mes antes.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tarjeta">
+    <div class="cab">
+      <h3>Brechas contra el A3500</h3>
+      <div class="controles" data-grafico="brechas"></div>
+    </div>
+    <div class="grafico bajo" id="g-brechas" role="img" aria-label="Brechas cambiarias del MEP, CCL y blue"></div>
+  </div>
+  </section>
+
+  <section class="panel" id="reservas" role="tabpanel" aria-labelledby="tab-reservas" hidden>
+  <h2>Reservas internacionales</h2>
+  <div class="tarjeta">
+    <div class="cab">
+      <h3>Brutas y netas <span class="nota">· millones de USD · netas desde 2024</span></h3>
+      <div class="controles" data-grafico="reservas"></div>
+    </div>
+    <div class="grafico" id="g-reservas" role="img" aria-label="Reservas brutas y netas"></div>
+  </div>
+
+  <div class="dos" style="margin-top:12px">
+    <div class="tarjeta">
+      <div class="cab"><h3 id="t-mes">Cómo se movieron las brutas en el último mes</h3></div>
+      <div class="grafico bajo" id="g-mes" role="img" aria-label="Variación mensual de reservas brutas por factor"></div>
+    </div>
+    <div class="tarjeta">
+      <div class="cab"><h3 id="t-comp">De brutas a netas</h3></div>
+      <div class="grafico bajo" id="g-comp" role="img" aria-label="Composición de reservas brutas a netas"></div>
+    </div>
+  </div>
+  </section>
+
+  <footer>
+    <p><strong>Fuentes:</strong> BCRA (API de estadísticas monetarias y cambiarias) para el A3500, el minorista, la banda, el real, las reservas y sus factores de variación; ArgentinaDatos y DolarApi para MEP, CCL, blue, tarjeta y cripto (precio de venta); Yahoo Finance para el DXY (ICE).</p>
+    <p><strong>Variaciones:</strong> "día" es contra el dato hábil anterior; "mes", contra el último dato de un mes antes. Brecha y posición en la banda varían en puntos porcentuales; reservas, en millones de USD.</p>
+    <p><strong>Reservas netas:</strong> metodología FMI = brutas − exceso de DEG − swap China − BIS − encajes en USD − swap EE.UU. − organismos − REPOs (incl. SEDESA). Ex BOPREAL resta además el stock de BOPREAL; ex Tesoro, los depósitos del Tesoro en moneda extranjera.</p>
+    <p><strong>Brecha:</strong> dólar / A3500 − 1. <strong>Posición en la banda:</strong> (A3500 − piso) / (techo − piso).</p>
+    <p id="nota-pie"></p>
+  </footer>
+</div>
+
+<script>
+const D = /*__DATOS__*/null;
+
+// ---------- Formatos (es-AR) ----------
+const nf = (d) => new Intl.NumberFormat("es-AR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const nfs = (d) => new Intl.NumberFormat("es-AR", { minimumFractionDigits: d, maximumFractionDigits: d, signDisplay: "exceptZero" });
+const F = {
+  ars: (v) => "$" + nf(2).format(v),
+  mm: (v) => nf(0).format(v),
+  pct: (v, d = 1) => nf(d).format(v * 100) + " %",
+  pctS: (v, d = 1) => nfs(d).format(v * 100) + " %",
+  ppS: (v, d = 1) => nfs(d).format(v * 100) + " pp",
+  mmS: (v) => nfs(0).format(v),
+};
+const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const aFecha = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const fCorta = (s) => { const d = aFecha(s); return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0"); };
+const fLarga = (d) => String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear();
+const ejeFecha = (v) => {
+  const d = new Date(v);
+  if (d.getDate() === 1 && d.getMonth() === 0) return String(d.getFullYear());
+  if (d.getDate() === 1) return MESES[d.getMonth()] + " " + String(d.getFullYear()).slice(2);
+  return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
+};
+
+// ---------- Colores: cada entidad tiene su color fijo en todos los gráficos ----------
+const COLOR = {
+  a3500: "s1", mep_venta: "s2", ccl_venta: "s3", blue_venta: "s4",
+  oficial_minorista: "s5", tarjeta_venta: "s6", cripto_venta: "s7",
+  brecha_mep: "s2", brecha_ccl: "s3", brecha_blue: "s4",
+  reservas_brutas: "s1", netas_fmi: "s2", netas_ex_bopreal: "s3", netas_ex_bopreal_tesoro: "s4",
+};
+let T = {};
+function leerTema() {
+  const cs = getComputedStyle(document.documentElement);
+  const v = (n) => cs.getPropertyValue("--" + n).trim();
+  T = { page: v("page"), surface: v("surface"), ink: v("ink"), ink2: v("ink-2"), muted: v("muted"), grid: v("grid"),
+        axis: v("axis"), border: v("border"), banda: v("banda"), sube: v("sube"), baja: v("baja"), font: v("font") };
+  for (let i = 1; i <= 7; i++) T["s" + i] = v("s" + i);
+}
+const color = (id) => T[COLOR[id]] || T.ink2;
+
+// ---------- Encabezado, KPIs y tabla ----------
+function encabezado() {
+  const g = new Date(D.generado);
+  document.getElementById("actualizado").textContent =
+    "Actualizado el " + fLarga(g) + " a las " + String(g.getHours()).padStart(2, "0") + ":" + String(g.getMinutes()).padStart(2, "0");
+}
+
+// Formato del valor y de las variaciones según el tipo de KPI
+const FMT_KPI = {
+  ars:    { val: (v) => F.ars(v),            var: (v, d) => F.pctS(v, d) },
+  indice: { val: (v) => nf(2).format(v),     var: (v, d) => F.pctS(v, d) },
+  brl:    { val: (v) => "R$ " + nf(3).format(v), var: (v, d) => F.pctS(v, d) },
+  pct:    { val: (v) => F.pct(v),            var: (v) => F.ppS(v) },
+  banda:  { val: (v) => F.pct(v),            var: (v) => F.ppS(v) },
+  mm:     { val: (v) => F.mm(v),             var: (v) => F.mmS(v) },
+};
+function spark(vals) {
+  const xs = vals.filter((v) => v != null);
+  if (xs.length < 2) return "";
+  const mn = Math.min(...xs), mx = Math.max(...xs), r = mx - mn || 1, W = 200, H = 34;
+  const pts = xs.map((v, i) => `${(i / (xs.length - 1) * W).toFixed(1)},${(H - 2 - (v - mn) / r * (H - 4)).toFixed(1)}`);
+  const ult = pts[pts.length - 1].split(",");
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    <polyline points="${pts.join(" ")}" fill="none" stroke="${T.s1}" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
+    <circle cx="${ult[0]}" cy="${ult[1]}" r="2.5" fill="${T.s1}"/></svg>`;
+}
+function kpis() {
+  const cont = document.getElementById("kpis");
+  cont.innerHTML = "";
+  D.kpis.forEach((g, i) => {
+    const sec = document.createElement("div");
+    sec.className = "grupo" + (i === 0 ? " ancho" : "");
+    sec.innerHTML = `<h2>${g.grupo}</h2><div class="kpis"></div>`;
+    const grid = sec.querySelector(".kpis");
+    for (const k of g.items) {
+      const f = FMT_KPI[k.tipo];
+      const dec = k.tipo === "ars" ? 2 : 1;
+      const v = (x, d) => x == null ? "–" : (x > 0 ? "▲ " : x < 0 ? "▼ " : "") + f.var(x, d);
+      const el = document.createElement("div");
+      el.className = "kpi";
+      el.innerHTML = `<div class="etq"><span>${k.etiqueta}</span><span class="fecha">al ${fCorta(k.fecha)}</span></div>
+        <div class="val">${f.val(k.valor)}</div>
+        ${k.ayuda ? `<div class="ayuda">${k.ayuda}</div>` : ""}
+        <div class="vars"><span><b>Día</b>${v(k.var_dia, dec)}</span><span><b>Mes</b>${v(k.var_mes, 1)}</span></div>
+        ${spark(k.spark)}`;
+      grid.appendChild(el);
+    }
+    cont.appendChild(sec);
+  });
+}
+
+function tablaDolares() {
+  const tb = document.querySelector("#tabla-dolares tbody");
+  tb.innerHTML = "";
+  for (const f of D.tabla_dolares) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td><span class="punto" style="background:${color(f.id)}"></span>${f.etiqueta}</td>
+      <td>${nf(2).format(f.valor)}<span class="fecha">${fCorta(f.fecha)}</span></td>
+      <td>${f.var_dia != null ? F.pctS(f.var_dia, 2) : "–"}</td>
+      <td>${f.var_mes != null ? F.pctS(f.var_mes, 1) : "–"}</td>`;
+    tb.appendChild(tr);
+  }
+}
+
+// ---------- Helpers de ECharts ----------
+const graficos = {};
+function pares(bloque, col) {
+  const f = bloque.fechas, v = bloque[col], out = [];
+  for (let i = 0; i < f.length; i++) if (v[i] != null) out.push([f[i], v[i]]);
+  return out;
+}
+function tooltipEje(fmtValor) {
+  return {
+    trigger: "axis",
+    axisPointer: { type: "line", lineStyle: { color: T.axis } },
+    backgroundColor: T.surface, borderColor: T.border, borderWidth: 1,
+    textStyle: { color: T.ink, fontSize: 12.5, fontFamily: T.font },
+    extraCssText: "box-shadow:0 4px 16px rgba(0,0,0,0.12);border-radius:8px;",
+    formatter: (ps) => {
+      if (!ps.length) return "";
+      const fecha = fLarga(aFecha(ps[0].value[0]));
+      let html = `<div style="font-weight:600;margin-bottom:4px">${fecha}</div>`, banda = null;
+      for (const p of ps) {
+        if (p.seriesId === "banda_inf") { banda = banda || {}; banda.inf = p.value[1]; continue; }
+        if (p.seriesId === "banda_sup") { banda = banda || {}; banda.sup = p.value[2]; continue; }
+        html += `<div style="display:flex;justify-content:space-between;gap:16px"><span>${p.marker}${p.seriesName}</span><b>${fmtValor(p.value[1])}</b></div>`;
+      }
+      if (banda && banda.inf != null)
+        html += `<div style="display:flex;justify-content:space-between;gap:16px;color:${T.ink2}"><span>Banda</span><span>${fmtValor(banda.inf)} – ${fmtValor(banda.sup)}</span></div>`;
+      return html;
+    },
+  };
+}
+const angosto = () => window.innerWidth < 560;
+function base(fmtEje) {
+  return {
+    animation: false,
+    textStyle: { fontFamily: T.font, color: T.ink2 },
+    grid: { left: 8, right: 18, top: 44, bottom: 64, containLabel: true },
+    // En el celular la leyenda va en un solo renglón con flechas, para no pisar el gráfico
+    legend: { type: angosto() ? "scroll" : "plain", top: 4, left: 0, icon: "roundRect", itemWidth: 14, itemHeight: 4, itemGap: 14,
+              textStyle: { color: T.ink2, fontSize: 12.5, fontFamily: T.font }, inactiveColor: T.axis,
+              pageIconColor: T.ink2, pageIconInactiveColor: T.axis, pageTextStyle: { color: T.muted } },
+    xAxis: { type: "time", splitNumber: angosto() ? 3 : 6, axisLine: { lineStyle: { color: T.axis } }, axisTick: { show: false },
+             axisLabel: { color: T.muted, hideOverlap: true, formatter: ejeFecha }, splitLine: { show: false } },
+    yAxis: { type: "value", scale: true, axisLabel: { color: T.muted, formatter: fmtEje },
+             splitLine: { lineStyle: { color: T.grid } } },
+    dataZoom: [
+      // Zoom con Ctrl + ruedita (la ruedita sola baja por la página); en el celular, sólo con la barra
+      { type: "inside", filterMode: "filter", zoomOnMouseWheel: "ctrl", moveOnMouseWheel: false,
+        moveOnMouseMove: !angosto(), preventDefaultMouseMove: !angosto() },
+      { type: "slider", height: 22, bottom: 10, borderColor: T.grid, backgroundColor: "transparent",
+        fillerColor: T.banda, handleStyle: { color: T.surface, borderColor: T.axis },
+        moveHandleStyle: { color: T.axis }, dataBackground: { lineStyle: { color: T.axis }, areaStyle: { color: T.banda } },
+        selectedDataBackground: { lineStyle: { color: T.muted }, areaStyle: { color: T.banda } },
+        textStyle: { color: T.muted, fontSize: 11 }, labelFormatter: (v) => fLarga(new Date(v)), brushSelect: false },
+    ],
+  };
+}
+function linea(id, nombre, data, extra = {}) {
+  return Object.assign({ id, name: nombre, type: "line", data, showSymbol: false, symbolSize: 8,
+    lineStyle: { width: 2, color: color(id) }, itemStyle: { color: color(id) },
+    emphasis: { focus: "none", lineStyle: { width: 2 } }, sampling: "lttb" }, extra);
+}
+
+// ---------- Selector de período por gráfico ----------
+const PERIODOS = [["1M", 1], ["3M", 3], ["6M", 6], ["1A", 12], ["4A", 48], ["Todo", null]];
+function controlesPeriodo(nombre, ultimaFecha, inicial) {
+  const cont = document.querySelector(`.controles[data-grafico="${nombre}"]`);
+  const extras = [...cont.children];
+  cont.innerHTML = "";
+  const aplicar = (meses) => {
+    const g = graficos[nombre];
+    if (!g) return;
+    if (meses == null) { g.dispatchAction({ type: "dataZoom", start: 0, end: 100 }); return; }
+    const fin = aFecha(ultimaFecha), ini = new Date(fin); ini.setMonth(ini.getMonth() - meses);
+    g.dispatchAction({ type: "dataZoom", startValue: ini.getTime(), endValue: fin.getTime() });
+  };
+  for (const [etq, meses] of PERIODOS) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = etq; b.setAttribute("aria-pressed", etq === inicial ? "true" : "false");
+    b.onclick = () => { cont.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", "false"));
+                        b.setAttribute("aria-pressed", "true"); estado[nombre] = etq; aplicar(meses); };
+    cont.appendChild(b);
+  }
+  extras.forEach((e) => cont.appendChild(e));
+  estado[nombre] = estado[nombre] || inicial;
+  return () => aplicar(PERIODOS.find((p) => p[0] === estado[nombre])[1]);
+}
+const estado = {};
+function iniciar(nombre, el, opt, ultimaFecha, periodoInicial) {
+  if (graficos[nombre]) graficos[nombre].dispose();
+  const g = echarts.init(document.getElementById(el), null, { renderer: "canvas" });
+  g.setOption(opt);
+  graficos[nombre] = g;
+  if (ultimaFecha) {
+    const aplicar = controlesPeriodo(nombre, ultimaFecha, periodoInicial);
+    aplicar();
+  }
+  return g;
+}
+const ultima = (bloque) => bloque.fechas[bloque.fechas.length - 1];
+
+// ---------- Gráfico 1: tipos de cambio con banda ----------
+const VISIBLES_TC = ["a3500", "mep_venta", "ccl_venta", "blue_venta"];
+function graficoTC() {
+  const tc = D.tc, E = D.etiquetas, log = document.getElementById("tc-log").checked;
+  const series = [];
+  // Banda: piso (línea) + ancho apilado (área) para sombrear entre piso y techo
+  const inf = [], sup = [];
+  for (let i = 0; i < tc.fechas.length; i++) {
+    const a = tc.banda_inferior[i], b = tc.banda_superior[i];
+    if (a != null && b != null) { inf.push([tc.fechas[i], a]); sup.push([tc.fechas[i], b - a, b]); }
+  }
+  const estiloBanda = { width: 1, type: [4, 3], color: T.muted };
+  series.push({ id: "banda_inf", name: "Banda cambiaria", type: "line", data: inf, stack: "banda", showSymbol: false,
+                lineStyle: estiloBanda, itemStyle: { color: T.muted }, z: 1 });
+  series.push({ id: "banda_sup", name: "Banda cambiaria", type: "line", data: sup, stack: "banda", showSymbol: false,
+                lineStyle: estiloBanda, itemStyle: { color: T.muted }, areaStyle: { color: T.banda }, z: 1 });
+  for (const id of Object.keys(COLOR).filter((k) => k in tc && !k.startsWith("banda")))
+    series.push(linea(id, E[id], pares(tc, id)));
+  const sel = {};
+  for (const id of Object.keys(COLOR)) if (id in tc) sel[E[id]] = VISIBLES_TC.includes(id);
+  sel["Banda cambiaria"] = true;
+  const opt = base((v) => nf(0).format(v));
+  opt.legend.selected = sel;
+  if (!angosto() && document.getElementById("g-tc").clientWidth < 760) opt.grid.top = 70;   // leyenda en dos renglones
+  opt.yAxis.type = log ? "log" : "value";
+  opt.yAxis.logBase = 10;
+  opt.tooltip = tooltipEje((v) => nf(2).format(v));
+  opt.series = series;
+  iniciar("tc", "g-tc", opt, ultima(tc), "4A");
+}
+
+// ---------- Gráfico 2: brechas ----------
+function graficoBrechas() {
+  const b = D.brechas, E = D.etiquetas;
+  const opt = base((v) => nf(0).format(v * 100) + " %");
+  opt.tooltip = tooltipEje((v) => F.pct(v));
+  opt.series = Object.keys(D.brechas).filter((k) => k !== "fechas").map((id) => linea(id, E[id], pares(b, id)));
+  opt.series[0].markLine = { silent: true, symbol: "none", label: { show: false },
+                             lineStyle: { color: T.axis, type: "solid", width: 1 }, data: [{ yAxis: 0 }] };
+  iniciar("brechas", "g-brechas", opt, ultima(b), "4A");
+}
+
+// ---------- Gráfico 3: reservas brutas y netas ----------
+function graficoReservas() {
+  const r = D.reservas, E = D.etiquetas;
+  const opt = base((v) => nf(0).format(v));
+  opt.yAxis.scale = false;
+  opt.tooltip = tooltipEje((v) => nf(0).format(v));
+  opt.series = ["reservas_brutas", "netas_fmi", "netas_ex_bopreal", "netas_ex_bopreal_tesoro"]
+    .map((id) => linea(id, E[id], pares(r, id)));
+  opt.series[1].markLine = { silent: true, symbol: "none", label: { show: false },
+                             lineStyle: { color: T.axis, type: "solid", width: 1 }, data: [{ yAxis: 0 }] };
+  iniciar("reservas", "g-reservas", opt, ultima(r), "Todo");
+}
+
+// ---------- Waterfalls ----------
+// pasos: [{nombre, valor, total, nota}]. Los totales van desde 0; los pasos, desde el acumulado.
+function waterfall(nombre, el, pasos, { minEje = null, rotar = false } = {}) {
+  let acum = 0;
+  const bases = [], barras = [];
+  for (const p of pasos) {
+    let lo, hi;
+    if (p.total) { lo = 0; hi = p.valor; acum = p.valor; }
+    else { lo = Math.min(acum, acum + p.valor); hi = Math.max(acum, acum + p.valor); acum += p.valor; }
+    const col = p.total ? T.s1 : p.valor >= 0 ? T.sube : T.baja;
+    bases.push(lo);
+    barras.push({ value: hi - lo, real: p.valor, total: !!p.total, nota: p.nota, itemStyle: { color: col, borderRadius: 3 },
+                  label: { position: (p.total || p.valor >= 0) ? "top" : "bottom" } });
+  }
+  const ancho = document.getElementById(el).clientWidth;
+  const angosto = ancho < 520;
+  const opt = {
+    animation: false,
+    textStyle: { fontFamily: T.font, color: T.ink2 },
+    grid: { left: 8, right: 8, top: 28, bottom: 8, containLabel: true },
+    tooltip: {
+      trigger: "item", backgroundColor: T.surface, borderColor: T.border, textStyle: { color: T.ink, fontSize: 12.5, fontFamily: T.font },
+      extraCssText: "box-shadow:0 4px 16px rgba(0,0,0,0.12);border-radius:8px;max-width:260px;white-space:normal;",
+      formatter: (p) => `<b>${p.name}</b><br>${p.data.total ? nf(0).format(p.data.real) : F.mmS(p.data.real)} MM USD` +
+                        (p.data.nota ? `<br><span style="color:${T.ink2}">${p.data.nota}</span>` : ""),
+    },
+    xAxis: { type: "category", data: pasos.map((p) => p.nombre), axisLine: { lineStyle: { color: T.axis } }, axisTick: { show: false },
+             axisLabel: { color: T.ink2, fontSize: 11, interval: 0, rotate: (rotar || angosto) ? 35 : 0,
+                          width: (rotar || angosto) ? 110 : Math.max(60, ancho / pasos.length - 6), overflow: "break", lineHeight: 13 } },
+    yAxis: { type: "value", min: minEje, axisLabel: { color: T.muted, formatter: (v) => nf(0).format(v) }, splitLine: { lineStyle: { color: T.grid } } },
+    series: [
+      { type: "bar", stack: "w", data: bases, itemStyle: { color: "transparent" }, silent: true, tooltip: { show: false } },
+      { type: "bar", stack: "w", data: barras, barMaxWidth: 44, labelLayout: { hideOverlap: true },
+        label: { show: true, color: T.ink2, fontSize: 11, fontFamily: T.font,
+                 formatter: (p) => p.data.total ? nf(0).format(p.data.real) : F.mmS(p.data.real) } },
+    ],
+  };
+  iniciar(nombre, el, opt);
+}
+
+function graficoMes() {
+  const w = D.waterfall_mes;
+  document.getElementById("t-mes").innerHTML =
+    `Cómo se movieron las brutas en el último mes <span class="nota">· ${fCorta(w.desde)} al ${fCorta(w.hasta)} · MM USD</span>`;
+  const pasos = [{ nombre: "Brutas " + fCorta(w.desde), valor: w.inicio, total: true }]
+    .concat(w.pasos.map((p) => ({ nombre: p.etiqueta, valor: p.valor, nota: p.nota })))
+    .concat([{ nombre: "Brutas " + fCorta(w.hasta), valor: w.fin, total: true }]);
+  // El eje no arranca en 0: si no, los movimientos (cientos de MM) no se ven contra ~50.000 MM
+  let acum = w.inicio, mn = Math.min(w.inicio, w.fin);
+  for (const p of w.pasos) { acum += p.valor; mn = Math.min(mn, acum); }
+  const minEje = Math.floor((mn - 1500) / 1000) * 1000;
+  waterfall("mes", "g-mes", pasos, { minEje });
+}
+
+function graficoComposicion() {
+  const c = D.composicion;
+  document.getElementById("t-comp").innerHTML =
+    `De brutas a netas <span class="nota">· al ${fCorta(c.fecha)} · MM USD</span>`;
+  const ceros = c.pasos_fmi.filter((p) => Math.abs(p.valor) < 0.5).map((p) => p.etiqueta);
+  const pasos = [{ nombre: "Brutas", valor: c.brutas, total: true }]
+    .concat(c.pasos_fmi.filter((p) => Math.abs(p.valor) >= 0.5).map((p) => ({ nombre: p.etiqueta, valor: p.valor })))
+    .concat([{ nombre: "Netas FMI", valor: c.netas_fmi, total: true },
+             { nombre: "BOPREAL", valor: c.bopreal },
+             { nombre: "Netas ex BOPREAL", valor: c.netas_ex_bopreal, total: true },
+             { nombre: "Dep. Tesoro", valor: c.tesoro },
+             { nombre: "Netas ex BOPREAL y Tesoro", valor: c.netas_ex_bopreal_tesoro, total: true }]);
+  waterfall("comp", "g-comp", pasos, { rotar: true });
+  document.getElementById("nota-pie").textContent = ceros.length
+    ? `En la composición de brutas a netas se omiten los conceptos que hoy dan cero: ${ceros.join(", ").replace(/\.$/, "")}.` : "";
+}
+
+// ---------- Pestañas ----------
+// Los gráficos se dibujan al abrir su pestaña: ECharts no puede medir un contenedor oculto.
+const PANELES = {
+  resumen: () => kpis(),
+  dolares: () => { tablaDolares(); graficoTC(); graficoBrechas(); },
+  reservas: () => { graficoReservas(); graficoMes(); graficoComposicion(); },
+};
+let activa = null;
+function mostrar(id, empujarHistorial = true) {
+  if (!(id in PANELES)) id = "resumen";
+  for (const p of Object.keys(PANELES)) {
+    document.getElementById(p).hidden = p !== id;
+    document.getElementById("tab-" + p).setAttribute("aria-selected", String(p === id));
+  }
+  activa = id;
+  PANELES[id]();
+  if (empujarHistorial && location.hash !== "#" + id) history.replaceState(null, "", "#" + id);
+}
+document.querySelectorAll(".pestanas button").forEach((b) =>
+  b.addEventListener("click", () => mostrar(b.getAttribute("aria-controls"))));
+window.addEventListener("hashchange", () => mostrar(location.hash.slice(1), false));
+
+// ---------- Armado ----------
+function dibujarTodo() {
+  leerTema();
+  encabezado();
+  mostrar(activa || location.hash.slice(1), false);
+}
+document.getElementById("tc-log").addEventListener("change", graficoTC);
+window.addEventListener("resize", () => {
+  clearTimeout(window._rz);
+  window._rz = setTimeout(() => PANELES[activa](), 150);
+});
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", dibujarTodo);
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(dibujarTodo);
+</script>
+</body>
+</html>

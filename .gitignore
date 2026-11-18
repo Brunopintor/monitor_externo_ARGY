@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+desktop.ini
+~$*
+# Se regenera en cada corrida y es binario: no vale la pena versionarlo
+data/base_diaria.xlsx
