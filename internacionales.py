@@ -41,7 +41,7 @@ def dxy(desde: str = "2003-01-01") -> pd.Series:
         s = yahoo_diario("DX-Y.NYB", desde)
     except Exception as e:  # noqa: BLE001 — una fuente no oficial no tiene que frenar la actualización
         warnings.warn(f"No se pudo bajar el DXY de Yahoo Finance: {e}")
-        s = pd.Series(dtype=float)
+        s = pd.Series(dtype=float, index=pd.DatetimeIndex([]))
     return s.rename("dxy")
 
 

@@ -75,6 +75,16 @@ def construir(desde: str = "2003-01-01") -> pd.DataFrame:
     dxy = internacionales.dxy(desde)
 
     df = pd.concat([mon, cam, par, dxy], axis=1, sort=True)
+    df.index = pd.to_datetime(df.index)
+
+    # Si una fuente vino vacía se sigue igual (queda la columna sin datos), pero se avisa.
+    # Sin A3500 o sin reservas no tiene sentido publicar: se corta con error.
+    vacias = [c for c in df.columns if df[c].isna().all()]
+    if vacias:
+        print("AVISO: vinieron vacías estas series:", ", ".join(map(str, vacias)))
+    for critica in ("a3500", "reservas_brutas"):
+        if critica in vacias:
+            raise RuntimeError(f"La serie {critica} vino vacía: probablemente se cayó la API del BCRA.")
     df = df.loc[desde:pd.Timestamp(date.today())]          # las bandas vienen publicadas a futuro
     # Días hábiles: ArgentinaDatos repite el último valor en fines de semana y feriados.
     # Se dejan lunes a viernes, y se sacan los feriados (días sin A3500 anteriores al último A3500).

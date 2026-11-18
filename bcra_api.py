@@ -97,6 +97,8 @@ class BCRA:
                 break
         s = pd.Series({pd.Timestamp(x["fecha"]): x["valor"] for x in filas},
                       name=nombre or id_variable, dtype="float64")
+        if s.empty:   # índice de fechas aunque no haya datos, para poder juntarla con otras
+            s.index = pd.DatetimeIndex([], name="fecha")
         return s.sort_index()
 
     def series(self, ids: dict[str, int], **kw) -> pd.DataFrame:
@@ -128,7 +130,8 @@ class BCRA:
             if not res or offset >= total:
                 break
         if not filas:
-            return pd.DataFrame(columns=["tipoPase", "tipoCotizacion"])
+            return pd.DataFrame(columns=["tipoPase", "tipoCotizacion"], dtype="float64",
+                                index=pd.DatetimeIndex([], name="fecha"))
         return pd.DataFrame(filas).drop_duplicates("fecha").set_index("fecha").sort_index()
 
 
