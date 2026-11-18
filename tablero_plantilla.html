@@ -586,7 +586,16 @@ window.addEventListener("resize", () => {
   window._rz = setTimeout(() => PANELES[activa](), 150);
 });
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", dibujarTodo);
-(document.fonts ? document.fonts.ready : Promise.resolve()).then(dibujarTodo);
+if (!D) {
+  // Se abrió la plantilla directamente (sin datos): avisar en vez de mostrar la página vacía
+  document.querySelector(".contenedor").innerHTML = `<h1>Esta es la plantilla del tablero</h1>
+    <p class="bajada">No tiene datos: <code>tablero.py</code> la usa para generar <code>docs/index.html</code>.</p>
+    <p>Para ver el tablero, abrí
+    <a href="https://brunopintor.github.io/monitor_externo_ARGY/">brunopintor.github.io/monitor_externo_ARGY</a>
+    o el archivo <code>docs/index.html</code>.</p>`;
+} else {
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(dibujarTodo);
+}
 </script>
 </body>
 </html>
