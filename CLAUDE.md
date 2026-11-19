@@ -97,6 +97,7 @@ AJ control_super   = AI − dep. Tesoro − bopreal
 - **Dependencias:** `requirements.txt` con rangos acotados (`pandas>=3,<4`, etc.) para que una versión mayor nueva no rompa la corrida.
 - **Si falla una corrida:** GitHub le manda un mail a Bruno. Lo más probable es una caída de la API del BCRA o de ArgentinaDatos; se reintenta a mano. Si el DXY falla, la corrida no se corta: avisa y deja la serie vacía.
 - **Fuentes vacías:** si una serie viene vacía (Yahoo o una moneda del BCRA), la corrida sigue, imprime `AVISO: vinieron vacías estas series: ...` y el KPI no aparece. Sólo corta con error si faltan `a3500` o `reservas_brutas`. El 18/11/2026 una corrida falló por esto, antes del arreglo; la siguiente anduvo.
+- **"Hoy" es siempre la fecha de Argentina** (`bcra_api.hoy_ar()`), nunca `date.today()`: el servidor de GitHub está en UTC y la API cambiaria rechaza con 400 una fecha posterior a hoy. Así falló la corrida programada del 18/11/2026, que GitHub largó con casi 5 h de atraso (02:52 UTC). El cron está en el minuto 17 (`17 22 * * 1-5`), porque a la hora en punto GitHub se atrasa más.
 - **Avisos pendientes de GitHub** (no frenan nada): las actions v4/v5 usan Node 20, que está deprecado, y `ubuntu-latest` pasa a Ubuntu 26. Cuando salgan versiones nuevas de las actions, subirlas.
 
 ## Tablero (hecho el 18/11/2026)
