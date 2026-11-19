@@ -2,3 +2,4 @@
 pandas>=3.0,<4
 requests>=2.32,<3
 openpyxl>=3.1,<4
+tzdata   # zonas horarias en Windows

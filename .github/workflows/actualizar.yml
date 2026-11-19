@@ -7,7 +7,7 @@ name: Actualizar tablero
 
 on:
   schedule:
-    - cron: "0 22 * * 1-5"
+    - cron: "17 22 * * 1-5"   # 19:17 ART; a la hora en punto GitHub suele atrasarse
   workflow_dispatch:
 
 permissions:

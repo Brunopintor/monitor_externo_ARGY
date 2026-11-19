@@ -32,7 +32,8 @@ Uso rápido:
 from __future__ import annotations
 
 import time
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import requests
@@ -41,6 +42,15 @@ BASE = "https://api.bcra.gob.ar"
 MON = f"{BASE}/estadisticas/v4.0/monetarias"
 CAM = f"{BASE}/estadisticascambiarias/v1.0"
 
+
+
+def hoy_ar() -> date:
+    """Fecha de hoy en la Argentina.
+
+    No usar date.today(): en GitHub Actions el servidor está en UTC y desde las 21 h de
+    Argentina ya es "mañana"; la API cambiaria rechaza con 400 una fecha posterior a hoy.
+    """
+    return datetime.now(ZoneInfo("America/Argentina/Buenos_Aires")).date()
 
 class BCRA:
     def __init__(self, timeout: int = 30, reintentos: int = 3, verify=True):
@@ -83,7 +93,7 @@ class BCRA:
     def serie(self, id_variable: int, desde: str = "2003-01-01", hasta: str | None = None,
               nombre: str | None = None) -> pd.Series:
         """Serie completa de una variable, paginando de a 3000 registros."""
-        hasta = hasta or (date.today() + timedelta(days=60)).isoformat()  # bandas vienen pre-publicadas
+        hasta = hasta or (hoy_ar() + timedelta(days=60)).isoformat()  # bandas vienen pre-publicadas
         filas, offset = [], 0
         while True:
             d = self._get(f"{MON}/{id_variable}",
@@ -115,7 +125,7 @@ class BCRA:
 
     def cotizacion(self, moneda: str, desde: str = "2003-01-01", hasta: str | None = None) -> pd.DataFrame:
         """Serie de una moneda: columnas tipoPase (USD por unidad) y tipoCotizacion ($ por unidad)."""
-        hasta = hasta or date.today().isoformat()
+        hasta = hasta or hoy_ar().isoformat()   # la API rechaza (400) fechas posteriores a hoy en Argentina
         filas, offset = [], 0
         while True:
             d = self._get(f"{CAM}/Cotizaciones/{moneda}",

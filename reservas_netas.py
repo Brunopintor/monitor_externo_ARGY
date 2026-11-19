@@ -31,7 +31,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from bcra_api import BCRA
+from bcra_api import BCRA, hoy_ar
 
 AQUI = Path(__file__).parent
 INSUMOS = AQUI / "insumos_reservas_netas.xlsx"
@@ -63,7 +63,7 @@ def datos_api(desde: str, ref: pd.Timestamp) -> pd.DataFrame:
     deg = b.cotizacion("XDR", desde=ini)["tipoPase"].rename("usd_por_deg")
     oro = b.cotizacion("XAU", desde=ini)["tipoPase"].rename("usd_por_onza")
     d = pd.concat([d, cny, deg, oro], axis=1, sort=True)
-    return d[d.index <= pd.Timestamp.today()]
+    return d[d.index <= pd.Timestamp(hoy_ar())]
 
 
 def vencimientos_bopreal_12m(cron: pd.Series, fechas: pd.DatetimeIndex) -> pd.Series:

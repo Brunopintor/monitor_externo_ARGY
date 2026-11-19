@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from bcra_api import BCRA
+from bcra_api import BCRA, hoy_ar
 import internacionales
 import paralelos
 import reservas_netas
@@ -85,7 +85,7 @@ def construir(desde: str = "2003-01-01") -> pd.DataFrame:
     for critica in ("a3500", "reservas_brutas"):
         if critica in vacias:
             raise RuntimeError(f"La serie {critica} vino vacía: probablemente se cayó la API del BCRA.")
-    df = df.loc[desde:pd.Timestamp(date.today())]          # las bandas vienen publicadas a futuro
+    df = df.loc[desde:pd.Timestamp(hoy_ar())]          # las bandas vienen publicadas a futuro
     # Días hábiles: ArgentinaDatos repite el último valor en fines de semana y feriados.
     # Se dejan lunes a viernes, y se sacan los feriados (días sin A3500 anteriores al último A3500).
     # El día de hoy queda aunque el BCRA todavía no haya publicado el A3500.
