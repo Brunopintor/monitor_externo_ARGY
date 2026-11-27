@@ -5,3 +5,6 @@ desktop.ini
 ~$*
 # Se regenera en cada corrida y es binario: no vale la pena versionarlo
 data/base_diaria.xlsx
+
+# Planilla de descarga: la genera tablero.py en cada corrida y se publica sin versionarla
+docs/*.xlsx

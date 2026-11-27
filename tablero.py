@@ -6,6 +6,7 @@ Arma el tablero HTML (docs/index.html) a partir de lo que dejó actualizar_base.
 
 No llama a ninguna API: sólo lee data/base_diaria.csv y data/reservas_netas.csv,
 prepara los datos en JSON y los inserta en tablero_plantilla.html (ECharts).
+También genera la planilla de descarga (docs/monitor_externo_ARGY.xlsx, ver descarga_excel.py).
 """
 from __future__ import annotations
 
@@ -16,6 +17,8 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pandas as pd
+
+import descarga_excel
 
 AQUI = Path(__file__).parent
 DATA = AQUI / "data"
@@ -36,9 +39,30 @@ DOLARES = {
 }
 BRECHAS = {"brecha_mep": "MEP", "brecha_ccl": "CCL", "brecha_blue": "Blue"}
 NETAS = {
-    "netas_fmi": "Netas (metodología FMI)",
-    "netas_ex_bopreal": "Netas ex BOPREAL",
-    "netas_ex_bopreal_tesoro": "Netas ex BOPREAL y Tesoro",
+    "netas_fmi": "Reservas Netas 1",
+    "netas_ex_bopreal": "Reservas Netas 2",
+    "netas_ex_bopreal_tesoro": "Reservas Netas 3",
+}
+# Notas al pie de cada medida de reservas netas (van con asterisco en los boxes y bajo el gráfico)
+NOTAS_NETAS = {
+    "netas_fmi": "Metodología FMI: reservas brutas menos pasivos de corto plazo en moneda extranjera.",
+    "netas_ex_bopreal": "Reservas Netas 1 menos vencimientos de capital e intereses del bono BOPREAL "
+                        "en los próximos 12 meses.",
+    "netas_ex_bopreal_tesoro": "Reservas Netas 2 menos los depósitos en dólares del Tesoro Nacional en el BCRA.",
+}
+
+# Color de los boxes y de las variaciones según qué significa que la variable suba:
+#   "sube_malo"  -> suba en rojo, baja en verde (depreciación, brecha, dólar global fuerte)
+#   "sube_bueno" -> suba en verde, baja en rojo (reservas)
+#   "neutro"     -> gris siempre
+# Para cambiar el criterio de una variable alcanza con cambiar la palabra acá.
+SENTIDO = {
+    "a3500": "sube_malo", "mep_venta": "sube_malo", "ccl_venta": "sube_malo", "blue_venta": "sube_malo",
+    "oficial_minorista": "sube_malo", "tarjeta_venta": "sube_malo", "cripto_venta": "sube_malo",
+    "brecha_ccl": "sube_malo", "posicion_en_banda": "sube_malo",
+    "dxy": "sube_malo", "brl_por_usd": "sube_malo",
+    "reservas_brutas": "sube_bueno", "netas_fmi": "sube_bueno", "netas_ex_bopreal": "sube_bueno",
+    "netas_ex_bopreal_tesoro": "sube_bueno",
 }
 FACTORES = {
     "var_rrii_compra_divisas": "Compra de divisas",
@@ -125,8 +149,10 @@ KPIS = {
         ("brl_por_usd", "Real por dólar", "brl", "Reales brasileños por dólar (BCRA)"),
     ],
     "Reservas (MM USD)": [
-        ("reservas_brutas", "Brutas", "mm", None),
-        ("netas_ex_bopreal", "Netas ex BOPREAL", "mm", "Netas metodología FMI menos stock de BOPREAL"),
+        ("reservas_brutas", "Reservas Brutas", "mm", None),
+        ("netas_fmi", NETAS["netas_fmi"], "mm", None),
+        ("netas_ex_bopreal", NETAS["netas_ex_bopreal"], "mm", None),
+        ("netas_ex_bopreal_tesoro", NETAS["netas_ex_bopreal_tesoro"], "mm", None),
     ],
 }
 DIAS_SPARK = 66   # ~3 meses hábiles para la minicurva de cada KPI
@@ -146,6 +172,7 @@ def kpis(base: pd.DataFrame) -> list[dict]:
             dif = (lambda a, b: a / b - 1) if relativa else (lambda a, b: a - b)
             out.append({
                 "id": col, "etiqueta": etiqueta, "tipo": tipo, "ayuda": ayuda,
+                "sentido": SENTIDO.get(col, "neutro"), "nota": NOTAS_NETAS.get(col),
                 "fecha": f.strftime("%Y-%m-%d"), "valor": _num(v, 6),
                 "var_dia": _num(dif(v, s.iloc[-2]), 6) if len(s) > 1 else None,
                 "var_mes": _num(dif(v, v_mes), 6) if v_mes is not None else None,
@@ -161,7 +188,7 @@ def tabla_dolares(base: pd.DataFrame) -> list[dict]:
     for col, etq in DOLARES.items():
         v = variaciones(base[col])
         if v:
-            filas.append({"id": col, "etiqueta": etq, **v})
+            filas.append({"id": col, "etiqueta": etq, "sentido": SENTIDO.get(col, "neutro"), **v})
     return filas
 
 
@@ -201,7 +228,8 @@ def composicion_netas(rn: pd.DataFrame) -> dict:
         "brutas": _num(r["brutas"], 1),
         "pasos_fmi": pasos,
         "netas_fmi": _num(r["netas_fmi"], 1),
-        "bopreal": _num(-r["bopreal"], 1),
+        # lo que efectivamente se resta (vencimientos 12m o stock, según bopreal_metodo)
+        "bopreal": _num(-r.get("bopreal_restado", r["bopreal"]), 1),
         "netas_ex_bopreal": _num(r["netas_ex_bopreal"], 1),
         "tesoro": _num(-r["dep_tesoro_usd"], 1),
         "netas_ex_bopreal_tesoro": _num(r["netas_ex_bopreal_tesoro"], 1),
@@ -213,7 +241,7 @@ def armar_datos() -> dict:
     ahora = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
     return {
         "generado": ahora.strftime("%Y-%m-%dT%H:%M"),
-        "etiquetas": {**DOLARES, **BRECHAS, **NETAS, "reservas_brutas": "Brutas",
+        "etiquetas": {**DOLARES, **BRECHAS, **NETAS, "reservas_brutas": "Reservas Brutas",
                       "banda_inferior": "Banda inferior", "banda_superior": "Banda superior"},
         "kpis": kpis(base),
         "tabla_dolares": tabla_dolares(base),
@@ -222,6 +250,8 @@ def armar_datos() -> dict:
         "reservas": serie_columnar(base, ["reservas_brutas"] + list(NETAS), 1),
         "waterfall_mes": waterfall_mensual(base),
         "composicion": composicion_netas(rn),
+        "notas_netas": [NOTAS_NETAS[k] for k in NETAS],
+        "excel": descarga_excel.NOMBRE,
     }
 
 
@@ -234,6 +264,8 @@ def main():
     SALIDA.parent.mkdir(exist_ok=True)
     SALIDA.write_text(html.replace(MARCA, js), encoding="utf-8")
     print(f"OK: {SALIDA} ({SALIDA.stat().st_size / 1e6:.2f} MB)")
+    xlsx = descarga_excel.generar(*leer(), SALIDA.parent / descarga_excel.NOMBRE)
+    print(f"OK: {xlsx} ({xlsx.stat().st_size / 1e6:.2f} MB)")
 
 
 if __name__ == "__main__":

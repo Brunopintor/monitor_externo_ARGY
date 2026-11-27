@@ -39,6 +39,7 @@ python tablero.py                    # arma docs/index.html con los datos de dat
 | `reservas_netas.py` | Reservas netas (metodología FMI, ex BOPREAL, ex Tesoro, líquidas, metas). |
 | `actualizar_base.py` | Arma la base diaria del informe: series, brechas, posición en banda, variaciones. |
 | `tablero.py` | Lee `data/`, prepara los datos y los inserta en `tablero_plantilla.html` → `docs/index.html`. |
+| `descarga_excel.py` | Genera la planilla que se descarga desde el tablero (hojas Dólares y Reservas). |
 | `tablero_plantilla.html` | Diseño del tablero (HTML + ECharts). Los cambios de diseño van acá, nunca en `docs/index.html`. |
 
 ---
@@ -150,3 +151,14 @@ baja los datos, arma el tablero, commitea `data/` y `docs/` y publica en GitHub 
 - Para correrlo en el momento: pestaña **Actions** del repo → *Actualizar tablero* → **Run workflow**.
 - Para cambiar los insumos manuales: editar `insumos_reservas_netas.xlsx`, commit y push.
 - Antes de tocar algo en la PC: `git pull` (el bot sube datos nuevos todos los días).
+
+Desde el tablero se puede descargar:
+- **Excel** con la base completa: hoja *Dólares* (tipos de cambio, banda, brechas, DXY y real) y hoja *Reservas*
+  (brutas, netas 1, 2 y 3, sus componentes y los factores de variación diaria).
+- **PDF** de dos páginas con el resumen y la sección de reservas.
+
+### Medidas de reservas netas
+
+- **Reservas Netas 1:** metodología FMI, reservas brutas menos pasivos de corto plazo en moneda extranjera.
+- **Reservas Netas 2:** Netas 1 menos vencimientos de capital e intereses de BOPREAL en los próximos 12 meses.
+- **Reservas Netas 3:** Netas 2 menos los depósitos en dólares del Tesoro Nacional en el BCRA.

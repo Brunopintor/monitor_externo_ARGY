@@ -22,6 +22,7 @@ Este proyecto la reemplaza con Python y la API del BCRA. Más adelante va a alim
 | `actualizar_base.py` | Script principal. Arma `data/base_diaria.csv/.xlsx` (equivale a la hoja BASE + netas), `data/reservas_netas.csv` y `data/ultimo_dato.json`. |
 | `insumos_reservas_netas.xlsx` | Lo carga Bruno a mano: pasivos que no están en la API (BOPREAL, REPOs+SEDESA, organismos, swap USA, BIS, stock DEG) y parámetros. |
 | `tablero.py` | Lee `data/` (no llama APIs), arma el JSON del tablero y lo inserta en la plantilla → `docs/index.html`. |
+| `descarga_excel.py` | Arma `docs/monitor_externo_ARGY.xlsx` (botón "Descargar Excel"): hojas Dólares y Reservas; fila 1 = nombre, fila 2 = unidad · fuente, columna A = fecha. Está en `.gitignore`: se genera en cada corrida y se publica con Pages. |
 | `tablero_plantilla.html` | HTML + ECharts 5.5.1 (CDN). Tiene la marca `/*__DATOS__*/null` que reemplaza `tablero.py`. Los cambios de diseño van acá. |
 
 Para correrlo: `pip install pandas requests openpyxl` y después `python actualizar_base.py` (tarda ~1 minuto) y `python tablero.py`.
@@ -45,12 +46,13 @@ Todo en millones de USD. Las letras son las columnas de la hoja RRII.
 K exceso_deg       = max(stock_deg − 3166 × USD/DEG, 0)
 P swap_china_usd   = 130.000 MM CNY × ($/CNY) / A3500
 D netas_fmi        = brutas − K − P − bis − encajes − swap_usa − organismos − repos(+SEDESA)
-E netas_ex_bopreal = D − bopreal
+E netas_ex_bopreal = D − bopreal_restado        [vencimientos BOPREAL 12 meses; ver decisión 7]
+  netas_ex_bopreal_stock = D − stock de BOPREAL   [criterio del Excel; base de AH, G y L]
 F netas_ex_bopreal_tesoro = E − dep. Tesoro USD
-AH rin_sin_fmi_2025 = E − 12.151 (desde 15/04/25) − 2.028 (desde 04/08/25)
+AH rin_sin_fmi_2025 = netas_ex_bopreal_stock − 12.151 (desde 15/04/25) − 2.028 (desde 04/08/25)
 G netas_sin_eff_tmu = AH + ajustes de valuación de oro, DEG y yuan a precios del 31/01/25
 H liquidas         = brutas − stock_deg + 4.500 − oro − P − sedesa
-L var_vs_meta_rin  = E − (−5.058,32)   [E al 30/12/2024]
+L var_vs_meta_rin  = netas_ex_bopreal_stock − (−5.058,32)   [al 30/12/2024]
 AI control_netas   = D + encajes − encajes(t−3)
 AJ control_super   = AI − dep. Tesoro − bopreal
 ```
@@ -75,6 +77,7 @@ AJ control_super   = AI − dep. Tesoro − bopreal
    - Stock DEG fijo en 492,97 desde el 19/08/2026 (antes subía +1 por día).
    - SEDESA fijo en 3.287,70 desde el 29/12/2025.
    - **Pendiente:** Bruno tiene que verificar ambos valores contra el balance del BCRA.
+7. **BOPREAL en Reservas Netas 2 (27/11/2026, decisión de Bruno):** `netas_ex_bopreal` resta los **vencimientos de capital e intereses de los próximos 12 meses** (hoja `bopreal_cronograma`), no el stock. Con esto deja de coincidir con la columna E del Excel (al 24/11/2026: 4.398 contra 5.611 MM). Se controla con el parámetro `bopreal_metodo` (`venc_12m` o `stock`). Las series de metas con el FMI (AH, G, L) siguen con el stock, en `netas_ex_bopreal_stock`, para seguir siendo comparables con el programa. Antes de la primera emisión (stock 0, enero de 2024) los vencimientos dan 0. Ojo: en 2024 el cronograma incluye series emitidas después de cada fecha (p. ej. la Serie 4), así que esos meses están algo sobreestimados.
 6. **Histórico:** las netas se calculan desde 2024. Antes de esa fecha, si hace falta, tomar los valores congelados de la hoja RRII original. No intentar replicar fórmulas viejas.
 
 ## Repositorio y publicación (desde el 18/11/2026)
@@ -116,7 +119,12 @@ Decisiones de Bruno, no revertir sin consultar:
   - Brechas MEP, CCL y blue contra el A3500 (4 años por defecto).
   - Reservas brutas y netas: **el histórico más largo posible** (brutas desde 2003, netas desde 2024).
   - Waterfall mensual: cómo se movieron las brutas en el último mes, por factor (ids 78–82). Lo que todavía no tiene factores publicados va a "Sin desagregar".
-  - Waterfall de brutas a netas en el último día con netas. Omite los conceptos que dan 0 y lo aclara en el pie.
+  - Waterfall de brutas a netas en el último día con netas (Brutas → Netas 1 → BOPREAL 12 meses → Netas 2 → Dep. Tesoro → Netas 3). Omite los conceptos que dan 0 y lo aclara debajo.
+- **Nombres de reservas (27/11/2026):** Reservas Brutas, **Reservas Netas 1** (`netas_fmi`), **Netas 2** (`netas_ex_bopreal`) y **Netas 3** (`netas_ex_bopreal_tesoro`). Las notas al pie están en `NOTAS_NETAS` (`tablero.py`); en Resumen van con asteriscos (y tooltip) y debajo del grupo, y en Reservas, debajo del gráfico.
+- **Colores de los boxes (27/11/2026):** fondo verde o rojo suave según la **variación del día**, con la flecha de cada variación en su color; en gris si la variación es 0 o falta. El criterio por variable está en `SENTIDO` (`tablero.py`): suba = rojo (`sube_malo`) para dólares, brecha, posición en la banda, DXY y real; suba = verde (`sube_bueno`) para las reservas. La tablita de Dólares colorea igual sus columnas Día y Mes.
+- **Descargas (27/11/2026):**
+  - **Excel:** archivo estático generado por `descarga_excel.py`.
+  - **PDF:** se arma en el navegador con html2canvas 1.4.1 y jsPDF 2.5.1 (cdnjs, se cargan recién al apretar el botón). Son dos páginas A4 verticales, Resumen y Reservas, en modo claro y con ancho fijo de 1.240 px (`body.modo-pdf`). Es una captura: el texto no se puede seleccionar.
 - **Convenciones:**
   - "Variación del mes" = contra el último dato en o antes de (fecha − 1 mes). El waterfall mensual usa la misma ventana.
   - Formato argentino (1.552,26). Cada KPI muestra la fecha de su propio último dato, porque las series tienen rezagos distintos.

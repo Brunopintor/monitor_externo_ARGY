@@ -10,14 +10,18 @@ Fórmulas (letra = columna de la hoja RRII original):
   K  exceso_deg        = max(stock_deg − limite_deg × USD/DEG, 0)
   P  swap_china_usd    = swap_china_cny × ($/CNY) / A3500
   D  netas_fmi         = brutas − K − P − bis − encajes − swap_usa − organismos − repos(+SEDESA)
-  E  netas_ex_bopreal  = D − bopreal
-  F  netas_ex_bopreal_tesoro = E − depósitos del Tesoro en USD
+  E  netas_ex_bopreal  = D − bopreal_restado   ("Reservas Netas 2" en el tablero)
+        bopreal_restado = vencimientos de BOPREAL de los próximos 12 meses (parámetro bopreal_metodo =
+        "venc_12m", por defecto desde el 27/11/2026) o el stock total ("stock", criterio del Excel original).
+  F  netas_ex_bopreal_tesoro = E − depósitos del Tesoro en USD   ("Reservas Netas 3")
+     netas_ex_bopreal_stock  = D − stock de BOPREAL: base de las series de metas (AH, G, L), que siguen
+        el criterio del Excel para poder compararse con el programa con el FMI.
   M,N,O ajustes de valuación a tipos de cambio de programa (fecha_ref_tmu):
         oro × (precio_ref/precio_t) − oro,  ídem DEG y swap China (CNY por USD)
   G  netas_sin_eff_tmu = AH + M + N + O
-  AH rin_sin_fmi_2025  = E − desembolsos FMI EFF 2025 (cada uno desde su fecha)
+  AH rin_sin_fmi_2025  = netas_ex_bopreal_stock − desembolsos FMI EFF 2025 (cada uno desde su fecha)
   H  liquidas          = brutas − stock_deg + swap_china_activado − oro − P − sedesa
-  L  var_vs_meta_rin   = E − rin_base_metas
+  L  var_vs_meta_rin   = netas_ex_bopreal_stock − rin_base_metas
   AI control_netas     = D + encajes − encajes (3 días hábiles antes)
   AJ control_super_netas = AI − depósitos Tesoro − bopreal
 
@@ -67,7 +71,7 @@ def datos_api(desde: str, ref: pd.Timestamp) -> pd.DataFrame:
 
 
 def vencimientos_bopreal_12m(cron: pd.Series, fechas: pd.DatetimeIndex) -> pd.Series:
-    """Pagos de BOPREAL entre el inicio del mes de cada fecha y 12 meses después (referencia)."""
+    """Pagos de BOPREAL (capital e intereses) entre el inicio del mes de cada fecha y 12 meses después."""
     out = []
     for f in fechas:
         ini = f.to_period("M").to_timestamp()
@@ -103,7 +107,15 @@ def calcular(desde: str = "2024-01-01", api: pd.DataFrame | None = None) -> pd.D
     d["swap_china_usd"] = par["swap_china_cny"] * d["ars_por_cny"] / d["a3500"]                       # P
     d["netas_fmi"] = (d["brutas"] - d["exceso_deg"] - d["swap_china_usd"] - d["bis"] - d["encajes_usd"]
                       - d["swap_usa"] - d["organismos"] - d["repos"])                                 # D
-    d["netas_ex_bopreal"] = d["netas_fmi"] - d["bopreal"]                                             # E
+    # Antes de la primera emisión (stock 0, enero de 2024) no hay vencimientos que restar.
+    # Ojo: en 2024 el cronograma incluye series que se emitieron después de cada fecha (p. ej. la Serie 4).
+    d["bopreal_venc_12m"] = vencimientos_bopreal_12m(cron, d.index).where(d["bopreal"] > 0, 0.0)
+    metodo = str(par.get("bopreal_metodo", "venc_12m")).strip().lower()
+    if metodo not in ("venc_12m", "stock"):
+        raise ValueError(f'bopreal_metodo tiene que ser "venc_12m" o "stock", no "{metodo}"')
+    d["bopreal_restado"] = d["bopreal_venc_12m"] if metodo == "venc_12m" else d["bopreal"]
+    d["netas_ex_bopreal"] = d["netas_fmi"] - d["bopreal_restado"]                                     # E
+    d["netas_ex_bopreal_stock"] = d["netas_fmi"] - d["bopreal"]          # criterio Excel, para metas
     d["netas_ex_bopreal_tesoro"] = d["netas_ex_bopreal"] - d["dep_tesoro_usd"]                        # F
 
     d["ajuste_oro_tmu"] = d["oro"] * r["usd_por_onza"] / d["usd_por_onza"] - d["oro"]                 # M
@@ -111,15 +123,14 @@ def calcular(desde: str = "2024-01-01", api: pd.DataFrame | None = None) -> pd.D
     d["ajuste_yuan_tmu"] = d["swap_china_usd"] * cny_usd_ref / (d["a3500"] / d["ars_por_cny"]) - d["swap_china_usd"]  # O
     fmi = (par["desembolso_fmi_1"] * (d.index >= par["fecha_desembolso_fmi_1"])
            + par["desembolso_fmi_2"] * (d.index >= par["fecha_desembolso_fmi_2"]))
-    d["rin_sin_fmi_2025"] = d["netas_ex_bopreal"] - fmi                                               # AH
+    d["rin_sin_fmi_2025"] = d["netas_ex_bopreal_stock"] - fmi                                         # AH
     d["netas_sin_eff_tmu"] = d["rin_sin_fmi_2025"] + d["ajuste_oro_tmu"] + d["ajuste_deg_tmu"] + d["ajuste_yuan_tmu"]  # G
 
     d["liquidas"] = (d["brutas"] - d["stock_deg"] + par["swap_china_activado_usd"] - d["oro"]
                      - d["swap_china_usd"] - d["sedesa"])                                             # H
-    d["var_vs_meta_rin"] = d["netas_ex_bopreal"] - par["rin_base_metas"]                              # L
+    d["var_vs_meta_rin"] = d["netas_ex_bopreal_stock"] - par["rin_base_metas"]                        # L
     d["control_netas"] = d["netas_fmi"] + d["encajes_usd"] - d["encajes_usd"].shift(3)               # AI
     d["control_super_netas"] = d["control_netas"] - d["dep_tesoro_usd"] - d["bopreal"]               # AJ
-    d["bopreal_venc_12m_auto"] = vencimientos_bopreal_12m(cron, d.index)                              # referencia
     d.index.name = "fecha"
     return d
 
@@ -127,7 +138,7 @@ def calcular(desde: str = "2024-01-01", api: pd.DataFrame | None = None) -> pd.D
 SALIDA = ["brutas", "netas_fmi", "netas_ex_bopreal", "netas_ex_bopreal_tesoro", "netas_sin_eff_tmu",
           "rin_sin_fmi_2025", "liquidas", "var_vs_meta_rin", "control_netas", "control_super_netas",
           "exceso_deg", "swap_china_usd", "encajes_usd", "dep_tesoro_usd", "oro", "stock_deg", "swap_usa",
-          "bis", "sedesa", "bopreal", "bopreal_venc_12m_auto", "organismos", "repos",
+          "bis", "sedesa", "bopreal", "bopreal_venc_12m", "bopreal_restado", "netas_ex_bopreal_stock", "organismos", "repos",
           "ajuste_oro_tmu", "ajuste_deg_tmu", "ajuste_yuan_tmu"]
 
 if __name__ == "__main__":

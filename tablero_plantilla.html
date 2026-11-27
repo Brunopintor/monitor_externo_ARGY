@@ -31,6 +31,8 @@
   --s5: #e87ba4; --s6: #008300; --s7: #6250d6;
   --sube: #1baf7a; --baja: #e34948;
   --banda: rgba(82,81,78,0.10);
+  --bueno-fondo: #eef8ee; --bueno-borde: rgba(12,163,12,0.40); --bueno-txt: #006300;
+  --malo-fondo: #fcefef; --malo-borde: rgba(208,59,59,0.40); --malo-txt: #b02a2a;
   --font: "Aptos", "Inter", "Segoe UI", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
@@ -41,6 +43,8 @@
     --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
     --s5: #d55181; --s6: #0ca30c; --s7: #9085e9;
     --sube: #199e70; --baja: #e66767; --banda: rgba(195,194,183,0.10);
+    --bueno-fondo: rgba(12,163,12,0.12); --bueno-borde: rgba(12,163,12,0.45); --bueno-txt: #3fbf3f;
+    --malo-fondo: rgba(208,59,59,0.14); --malo-borde: rgba(230,103,103,0.50); --malo-txt: #e66767;
   }
 }
 :root[data-theme="dark"] {
@@ -50,6 +54,8 @@
   --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
   --s5: #d55181; --s6: #0ca30c; --s7: #9085e9;
   --sube: #199e70; --baja: #e66767; --banda: rgba(195,194,183,0.10);
+  --bueno-fondo: rgba(12,163,12,0.12); --bueno-borde: rgba(12,163,12,0.45); --bueno-txt: #3fbf3f;
+  --malo-fondo: rgba(208,59,59,0.14); --malo-borde: rgba(230,103,103,0.50); --malo-txt: #e66767;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -63,6 +69,15 @@ header { display: flex; flex-wrap: wrap; justify-content: space-between; align-i
 h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
 .bajada { color: var(--ink-2); margin: 4px 0 0; }
 .actualizado { color: var(--muted); font-size: 13px; text-align: right; }
+.descargas { display: flex; gap: 6px; justify-content: flex-end; margin-top: 6px; }
+.descargas a, .descargas button {
+  font: inherit; font-size: 12.5px; color: var(--ink); background: var(--surface); text-decoration: none;
+  border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; cursor: pointer;
+}
+.descargas a:hover, .descargas button:hover { background: var(--wash); }
+.descargas button:disabled { cursor: progress; opacity: .7; }
+/* Para el PDF: ancho fijo de escritorio, sin pestañas ni botones */
+body.modo-pdf .contenedor { width: 1240px; max-width: none; }
 h2 { font-size: 18px; font-weight: 600; margin: 36px 0 12px; }
 
 /* Pestañas */
@@ -76,12 +91,18 @@ h2 { font-size: 18px; font-weight: 600; margin: 36px 0 12px; }
 .panel[hidden] { display: none; }
 
 /* KPIs */
-.grupos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 24px; }
-.grupo.ancho { grid-column: 1 / -1; }
+.grupos { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0 12px; }
+.grupo { grid-column: span var(--cols, 6); min-width: 0; }
+.grupo .kpis { grid-template-columns: repeat(var(--cols, 6), minmax(0, 1fr)); }
 .grupo h2 { margin-top: 24px; }
-.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.grupo.ancho .kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-@media (max-width: 1180px) { .grupo.ancho .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.kpis { display: grid; gap: 12px; }
+@media (max-width: 1180px) {
+  .grupo { grid-column: 1 / -1; }
+  .grupo .kpis { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+}
+.notas-grupo { color: var(--muted); font-size: 12px; margin: 8px 0 0; padding: 0; list-style: none; }
+.notas-grupo li { margin: 2px 0; }
+.kpi .ast { color: var(--muted); cursor: help; margin-left: 1px; }
 .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px 12px; }
 .kpi .etq { color: var(--ink-2); font-size: 13px; display: flex; justify-content: space-between; gap: 8px; }
 .kpi .etq .fecha { color: var(--muted); font-size: 12px; }
@@ -89,6 +110,10 @@ h2 { font-size: 18px; font-weight: 600; margin: 36px 0 12px; }
 .kpi .ayuda { color: var(--muted); font-size: 11.5px; margin-top: -2px; min-height: 0; }
 .kpi .vars { display: flex; gap: 14px; font-size: 12.5px; margin-top: 6px; font-variant-numeric: tabular-nums; color: var(--ink-2); }
 .kpi .vars span b { color: var(--muted); font-weight: 400; margin-right: 3px; }
+.kpi.bueno { background: var(--bueno-fondo); border-color: var(--bueno-borde); }
+.kpi.malo { background: var(--malo-fondo); border-color: var(--malo-borde); }
+.var-bueno { color: var(--bueno-txt) !important; }
+.var-malo { color: var(--malo-txt) !important; }
 .kpi svg { display: block; width: 100%; height: 34px; margin-top: 8px; overflow: visible; }
 
 /* Tarjetas de gráficos */
@@ -131,7 +156,7 @@ footer a { color: var(--ink-2); }
 
 @media (max-width: 960px) {
   .grupos { grid-template-columns: minmax(0, 1fr); }
-  .grupo.ancho .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grupo .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .con-tabla, .dos { grid-template-columns: minmax(0, 1fr); }
   .tabla-dolares { padding-top: 0; }
 }
@@ -139,6 +164,7 @@ footer a { color: var(--ink-2); }
   .contenedor { padding: 20px 16px 40px; }
   h1 { font-size: 22px; }
   .actualizado { text-align: left; }
+  .descargas { justify-content: flex-start; }
   .kpi .val { font-size: 22px; }
   .grafico { height: 340px; }
   .grafico.bajo { height: 320px; }
@@ -152,10 +178,14 @@ footer a { color: var(--ink-2); }
       <h1>Tipo de cambio y reservas</h1>
       <p class="bajada">Dólares, brechas, banda cambiaria y reservas internacionales del BCRA</p>
     </div>
-    <div class="actualizado"><div id="actualizado"></div><div>Por <a href="https://www.linkedin.com/in/bruno-pintor-ab7438131/" target="_blank" rel="noopener" style="color:inherit">Bruno Pintor</a></div></div>
+    <div class="actualizado"><div id="actualizado"></div><div>Por <a href="https://www.linkedin.com/in/bruno-pintor-ab7438131/" target="_blank" rel="noopener" style="color:inherit">Bruno Pintor</a></div>
+      <div class="descargas no-pdf">
+        <a id="btn-excel" href="#" download>Descargar Excel</a>
+        <button type="button" id="btn-pdf">Descargar PDF</button>
+      </div></div>
   </header>
 
-  <nav class="pestanas" role="tablist" aria-label="Secciones">
+  <nav class="pestanas no-pdf" role="tablist" aria-label="Secciones">
     <button role="tab" id="tab-resumen" aria-controls="resumen" aria-selected="true">Resumen</button>
     <button role="tab" id="tab-dolares" aria-controls="dolares" aria-selected="false">Dólares</button>
     <button role="tab" id="tab-reservas" aria-controls="reservas" aria-selected="false">Reservas</button>
@@ -203,7 +233,7 @@ footer a { color: var(--ink-2); }
       <div class="controles" data-grafico="reservas"></div>
     </div>
     <div class="grafico" id="g-reservas" role="img" aria-label="Reservas brutas y netas"></div>
-    <p class="nota-graf">Netas (metodología FMI) = brutas − exceso de DEG − swap China − BIS − encajes en USD − swap EE.UU. − organismos − REPOs (incl. SEDESA). Ex BOPREAL resta además el stock de BOPREAL; ex Tesoro, los depósitos del Tesoro en moneda extranjera.</p>
+    <p class="nota-graf" id="nota-reservas"></p>
   </div>
 
   <div class="dos" style="margin-top:12px">
@@ -296,26 +326,48 @@ function spark(vals) {
     <polyline points="${pts.join(" ")}" fill="none" stroke="${T.s1}" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
     <circle cx="${ult[0]}" cy="${ult[1]}" r="2.5" fill="${T.s1}"/></svg>`;
 }
+// "bueno" / "malo" / "" según el signo de la variación y el sentido de la variable
+// (el sentido de cada variable se configura en SENTIDO, en tablero.py)
+function calidad(x, sentido) {
+  if (x == null || x === 0 || !sentido || sentido === "neutro") return "";
+  return (x > 0) === (sentido === "sube_bueno") ? "bueno" : "malo";
+}
 function kpis() {
   const cont = document.getElementById("kpis");
   cont.innerHTML = "";
+  // ancho de cada grupo en la grilla de 6 columnas: 1.º renglón entero; después, 2 + 4
+  const COLS = [6, 2, 4];
   D.kpis.forEach((g, i) => {
     const sec = document.createElement("div");
-    sec.className = "grupo" + (i === 0 ? " ancho" : "");
+    sec.className = "grupo";
+    sec.style.setProperty("--cols", COLS[i] || 6);
     sec.innerHTML = `<h2>${g.grupo}</h2><div class="kpis"></div>`;
     const grid = sec.querySelector(".kpis");
+    const notas = [];
     for (const k of g.items) {
       const f = FMT_KPI[k.tipo];
       const dec = k.tipo === "ars" ? 2 : 1;
-      const v = (x, d) => x == null ? "–" : (x > 0 ? "▲ " : x < 0 ? "▼ " : "") + f.var(x, d);
+      const v = (x, d) => {
+        if (x == null) return "–";
+        const c = calidad(x, k.sentido);
+        return `<span class="${c ? "var-" + c : ""}">${(x > 0 ? "▲ " : x < 0 ? "▼ " : "") + f.var(x, d)}</span>`;
+      };
+      let ast = "";
+      if (k.nota) { notas.push(k.nota); ast = `<span class="ast" title="${k.nota}">${"*".repeat(notas.length)}</span>`; }
       const el = document.createElement("div");
-      el.className = "kpi";
-      el.innerHTML = `<div class="etq"><span>${k.etiqueta}</span><span class="fecha">al ${fCorta(k.fecha)}</span></div>
+      el.className = "kpi " + calidad(k.var_dia, k.sentido);
+      el.innerHTML = `<div class="etq"><span>${k.etiqueta}${ast}</span><span class="fecha">al ${fCorta(k.fecha)}</span></div>
         <div class="val">${f.val(k.valor)}</div>
         ${k.ayuda ? `<div class="ayuda">${k.ayuda}</div>` : ""}
         <div class="vars"><span><b>Día</b>${v(k.var_dia, dec)}</span><span><b>Mes</b>${v(k.var_mes, 1)}</span></div>
         ${spark(k.spark)}`;
       grid.appendChild(el);
+    }
+    if (notas.length) {
+      const ul = document.createElement("ul");
+      ul.className = "notas-grupo";
+      ul.innerHTML = notas.map((n, j) => `<li>${"*".repeat(j + 1)} ${n}</li>`).join("");
+      sec.appendChild(ul);
     }
     cont.appendChild(sec);
   });
@@ -328,8 +380,8 @@ function tablaDolares() {
     const tr = document.createElement("tr");
     tr.innerHTML = `<td><span class="punto" style="background:${color(f.id)}"></span>${f.etiqueta}</td>
       <td>${nf(2).format(f.valor)}<span class="fecha">${fCorta(f.fecha)}</span></td>
-      <td>${f.var_dia != null ? F.pctS(f.var_dia, 2) : "–"}</td>
-      <td>${f.var_mes != null ? F.pctS(f.var_mes, 1) : "–"}</td>`;
+      <td class="var-${calidad(f.var_dia, f.sentido)}">${f.var_dia != null ? F.pctS(f.var_dia, 2) : "–"}</td>
+      <td class="var-${calidad(f.var_mes, f.sentido)}">${f.var_mes != null ? F.pctS(f.var_mes, 1) : "–"}</td>`;
     tb.appendChild(tr);
   }
 }
@@ -477,6 +529,8 @@ function graficoBrechas() {
 
 // ---------- Gráfico 3: reservas brutas y netas ----------
 function graficoReservas() {
+  document.getElementById("nota-reservas").innerHTML = D.notas_netas
+    .map((n, j) => `<b>Reservas Netas ${j + 1}:</b> ${n}`).join("<br>");
   const r = D.reservas, E = D.etiquetas;
   const opt = base((v) => nf(0).format(v));
   opt.yAxis.scale = false;
@@ -549,11 +603,11 @@ function graficoComposicion() {
   const ceros = c.pasos_fmi.filter((p) => Math.abs(p.valor) < 0.5).map((p) => p.etiqueta);
   const pasos = [{ nombre: "Brutas", valor: c.brutas, total: true }]
     .concat(c.pasos_fmi.filter((p) => Math.abs(p.valor) >= 0.5).map((p) => ({ nombre: p.etiqueta, valor: p.valor })))
-    .concat([{ nombre: "Netas FMI", valor: c.netas_fmi, total: true },
-             { nombre: "BOPREAL", valor: c.bopreal },
-             { nombre: "Netas ex BOPREAL", valor: c.netas_ex_bopreal, total: true },
+    .concat([{ nombre: "Netas 1", valor: c.netas_fmi, total: true },
+             { nombre: "BOPREAL 12 meses", valor: c.bopreal },
+             { nombre: "Netas 2", valor: c.netas_ex_bopreal, total: true },
              { nombre: "Dep. Tesoro", valor: c.tesoro },
-             { nombre: "Netas ex BOPREAL y Tesoro", valor: c.netas_ex_bopreal_tesoro, total: true }]);
+             { nombre: "Netas 3", valor: c.netas_ex_bopreal_tesoro, total: true }]);
   waterfall("comp", "g-comp", pasos, { rotar: true });
   document.getElementById("nota-comp").textContent = ceros.length
     ? `No se muestran los conceptos que hoy dan cero: ${ceros.join(", ").replace(/\.$/, "")}.` : "";
@@ -580,6 +634,59 @@ function mostrar(id, empujarHistorial = true) {
 document.querySelectorAll(".pestanas button").forEach((b) =>
   b.addEventListener("click", () => mostrar(b.getAttribute("aria-controls"))));
 window.addEventListener("hashchange", () => mostrar(location.hash.slice(1), false));
+
+// ---------- Descargas ----------
+document.getElementById("btn-excel").href = D ? D.excel : "#";
+document.getElementById("btn-excel").setAttribute("download", D ? D.excel : "");
+
+// PDF de dos páginas (Resumen y Reservas) a partir de lo que se ve en pantalla, en modo claro.
+// Las librerías se cargan recién al apretar el botón, para no hacer más lenta la página.
+const LIBS_PDF = [
+  "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+];
+const cargarScript = (src) => new Promise((ok, mal) => {
+  const el = document.createElement("script");
+  el.src = src; el.onload = ok; el.onerror = () => mal(new Error("no se pudo cargar " + src));
+  document.head.appendChild(el);
+});
+const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+async function descargarPDF(btn) {
+  const texto = btn.textContent, raiz = document.documentElement;
+  const temaPrevio = raiz.getAttribute("data-theme"), pestanaPrevia = activa;
+  btn.disabled = true; btn.textContent = "Generando PDF…";
+  try {
+    if (!window.html2canvas || !window.jspdf) for (const src of LIBS_PDF) await cargarScript(src);
+    raiz.setAttribute("data-theme", "light");
+    document.body.classList.add("modo-pdf");
+    leerTema();
+    const pdf = new window.jspdf.jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const W = 210, H = 297, M = 8;
+    const paginas = ["resumen", "reservas"];
+    for (let i = 0; i < paginas.length; i++) {
+      mostrar(paginas[i], false);
+      await esperar(350);   // que ECharts termine de dibujar
+      const lienzo = await window.html2canvas(document.querySelector(".contenedor"), {
+        scale: 2, backgroundColor: getComputedStyle(document.body).backgroundColor, useCORS: true,
+        windowWidth: 1280, ignoreElements: (el) => el.classList && el.classList.contains("no-pdf"),
+      });
+      let w = W - 2 * M, h = lienzo.height * w / lienzo.width;
+      if (h > H - 2 * M) { h = H - 2 * M; w = lienzo.width * h / lienzo.height; }
+      if (i > 0) pdf.addPage();
+      pdf.addImage(lienzo.toDataURL("image/jpeg", 0.92), "JPEG", (W - w) / 2, M, w, h);
+    }
+    pdf.save(`monitor_externo_ARGY_${D.generado.slice(0, 10)}.pdf`);
+  } catch (e) {
+    alert("No se pudo generar el PDF: " + e.message);
+  } finally {
+    document.body.classList.remove("modo-pdf");
+    if (temaPrevio == null) raiz.removeAttribute("data-theme"); else raiz.setAttribute("data-theme", temaPrevio);
+    leerTema();
+    mostrar(pestanaPrevia || "resumen", false);
+    btn.disabled = false; btn.textContent = texto;
+  }
+}
+document.getElementById("btn-pdf").addEventListener("click", (e) => descargarPDF(e.currentTarget));
 
 // ---------- Armado ----------
 function dibujarTodo() {

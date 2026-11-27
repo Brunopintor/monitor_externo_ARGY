@@ -76,32 +76,32 @@
   "valor": 278.497522
  },
  "mep_venta": {
-  "fecha": "2026-11-26",
-  "valor": 1688.7
+  "fecha": "2026-11-27",
+  "valor": 1666.4
  },
  "ccl_venta": {
-  "fecha": "2026-11-26",
+  "fecha": "2026-11-27",
   "valor": 1767.9
  },
  "blue_compra": {
-  "fecha": "2026-11-26",
+  "fecha": "2026-11-27",
   "valor": 1690.0
  },
  "blue_venta": {
-  "fecha": "2026-11-26",
+  "fecha": "2026-11-27",
   "valor": 1710.0
  },
  "tarjeta_venta": {
-  "fecha": "2026-11-26",
-  "valor": 2119.0
+  "fecha": "2026-11-27",
+  "valor": 2112.5
  },
  "cripto_venta": {
-  "fecha": "2026-11-26",
-  "valor": 1762.53
+  "fecha": "2026-11-27",
+  "valor": 1752.96
  },
  "dxy": {
-  "fecha": "2026-11-26",
-  "valor": 103.733002
+  "fecha": "2026-11-27",
+  "valor": 103.963997
  },
  "dep_tesoro_me_usd": {
   "fecha": "2026-11-24",
@@ -124,8 +124,8 @@
   "valor": 5.750497
  },
  "canje_ccl_mep": {
-  "fecha": "2026-11-26",
-  "valor": 0.0469
+  "fecha": "2026-11-27",
+  "valor": 0.06091
  },
  "dist_banda_sup": {
   "fecha": "2026-11-26",
@@ -144,16 +144,16 @@
   "valor": -0.002389
  },
  "var_d_mep_venta": {
-  "fecha": "2026-11-26",
-  "valor": -0.003776
+  "fecha": "2026-11-27",
+  "valor": -0.013205
  },
  "var_d_ccl_venta": {
-  "fecha": "2026-11-26",
-  "valor": -0.016248
+  "fecha": "2026-11-27",
+  "valor": 0.0
  },
  "var_d_blue_venta": {
-  "fecha": "2026-11-26",
-  "valor": 0.005882
+  "fecha": "2026-11-27",
+  "valor": 0.0
  },
  "var_d_reservas_brutas": {
   "fecha": "2026-11-24",
@@ -165,11 +165,11 @@
  },
  "netas_ex_bopreal": {
   "fecha": "2026-11-24",
-  "valor": 5610.525217
+  "valor": 4398.025217
  },
  "netas_ex_bopreal_tesoro": {
   "fecha": "2026-11-24",
-  "valor": 5475.618849
+  "valor": 4263.118849
  },
  "liquidas": {
   "fecha": "2026-11-24",
