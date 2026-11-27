@@ -101,7 +101,7 @@
  },
  "dxy": {
   "fecha": "2026-11-27",
-  "valor": 103.969002
+  "valor": 103.903999
  },
  "dep_tesoro_me_usd": {
   "fecha": "2026-11-24",
@@ -161,22 +161,22 @@
  },
  "netas_fmi": {
   "fecha": "2026-11-24",
-  "valor": 7160.875217
+  "valor": 9402.430051
  },
  "netas_ex_bopreal": {
   "fecha": "2026-11-24",
-  "valor": 4398.025217
+  "valor": 6639.580051
  },
  "netas_ex_bopreal_tesoro": {
   "fecha": "2026-11-24",
-  "valor": 4263.118849
+  "valor": 6504.673683
  },
  "liquidas": {
   "fecha": "2026-11-24",
-  "valor": 22940.553197
+  "valor": 26664.423197
  },
  "var_vs_meta_rin": {
   "fecha": "2026-11-24",
-  "valor": 10668.845217
+  "valor": 11697.900051
  }
 }
