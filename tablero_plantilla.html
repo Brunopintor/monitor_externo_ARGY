@@ -229,10 +229,17 @@ footer a { color: var(--ink-2); }
   <h2>Reservas internacionales</h2>
   <div class="tarjeta">
     <div class="cab">
-      <h3>Brutas y netas <span class="nota">· millones de USD · netas desde 2024</span></h3>
-      <div class="controles" data-grafico="reservas"></div>
+      <h3>Reservas brutas <span class="nota">· millones de USD</span></h3>
+      <div class="controles" data-grafico="brutas"></div>
     </div>
-    <div class="grafico" id="g-reservas" role="img" aria-label="Reservas brutas y netas"></div>
+    <div class="grafico bajo" id="g-brutas" role="img" aria-label="Reservas brutas"></div>
+  </div>
+  <div class="tarjeta">
+    <div class="cab">
+      <h3>Reservas internacionales netas (RIN) <span class="nota">· millones de USD · desde 2024</span></h3>
+      <div class="controles" data-grafico="netas"></div>
+    </div>
+    <div class="grafico bajo" id="g-netas" role="img" aria-label="Reservas internacionales netas: RIN 1, 2 y 3"></div>
     <p class="nota-graf" id="nota-reservas"></p>
   </div>
 
@@ -366,7 +373,7 @@ function kpis() {
     if (notas.length) {
       const ul = document.createElement("ul");
       ul.className = "notas-grupo";
-      ul.innerHTML = notas.map((n, j) => `<li>${"*".repeat(j + 1)} ${n}</li>`).join("");
+      ul.innerHTML = `<li>${D.nota_rin}</li>` + notas.map((n, j) => `<li>${"*".repeat(j + 1)} ${n}</li>`).join("");
       sec.appendChild(ul);
     }
     cont.appendChild(sec);
@@ -528,18 +535,29 @@ function graficoBrechas() {
 }
 
 // ---------- Gráfico 3: reservas brutas y netas ----------
-function graficoReservas() {
-  document.getElementById("nota-reservas").innerHTML = D.notas_netas
-    .map((n, j) => `<b>Reservas Netas ${j + 1}:</b> ${n}`).join("<br>");
+// Brutas y netas van en gráficos separados: en uno solo, la escala de las brutas (~50.000)
+// aplasta los movimientos de las netas.
+function graficoBrutas() {
   const r = D.reservas, E = D.etiquetas;
   const opt = base((v) => nf(0).format(v));
   opt.yAxis.scale = false;
+  opt.legend.show = false;   // una sola serie: el título la nombra
+  opt.grid.top = 16;
   opt.tooltip = tooltipEje((v) => nf(0).format(v));
-  opt.series = ["reservas_brutas", "netas_fmi", "netas_ex_bopreal", "netas_ex_bopreal_tesoro"]
-    .map((id) => linea(id, E[id], pares(r, id)));
-  opt.series[1].markLine = { silent: true, symbol: "none", label: { show: false },
+  opt.series = [linea("reservas_brutas", E.reservas_brutas, pares(r, "reservas_brutas"))];
+  iniciar("brutas", "g-brutas", opt, ultima(r), "Todo");
+}
+function graficoNetas() {
+  document.getElementById("nota-reservas").innerHTML = [D.nota_rin]
+    .concat(D.notas_netas.map((n, j) => `<b>RIN ${j + 1}:</b> ${n}`)).join("<br>");
+  const r = D.reservas, E = D.etiquetas;
+  const ids = ["netas_fmi", "netas_ex_bopreal", "netas_ex_bopreal_tesoro"];
+  const opt = base((v) => nf(0).format(v));
+  opt.tooltip = tooltipEje((v) => nf(0).format(v));
+  opt.series = ids.map((id) => linea(id, E[id], pares(r, id)));
+  opt.series[0].markLine = { silent: true, symbol: "none", label: { show: false },
                              lineStyle: { color: T.axis, type: "solid", width: 1 }, data: [{ yAxis: 0 }] };
-  iniciar("reservas", "g-reservas", opt, ultima(r), "Todo");
+  iniciar("netas", "g-netas", opt, ultima(r), "Todo");
 }
 
 // ---------- Waterfalls ----------
@@ -603,11 +621,11 @@ function graficoComposicion() {
   const ceros = c.pasos_fmi.filter((p) => Math.abs(p.valor) < 0.5).map((p) => p.etiqueta);
   const pasos = [{ nombre: "Brutas", valor: c.brutas, total: true }]
     .concat(c.pasos_fmi.filter((p) => Math.abs(p.valor) >= 0.5).map((p) => ({ nombre: p.etiqueta, valor: p.valor })))
-    .concat([{ nombre: "Netas 1", valor: c.netas_fmi, total: true },
+    .concat([{ nombre: "RIN 1", valor: c.netas_fmi, total: true },
              { nombre: "BOPREAL 12 meses", valor: c.bopreal },
-             { nombre: "Netas 2", valor: c.netas_ex_bopreal, total: true },
+             { nombre: "RIN 2", valor: c.netas_ex_bopreal, total: true },
              { nombre: "Dep. Tesoro", valor: c.tesoro },
-             { nombre: "Netas 3", valor: c.netas_ex_bopreal_tesoro, total: true }]);
+             { nombre: "RIN 3", valor: c.netas_ex_bopreal_tesoro, total: true }]);
   waterfall("comp", "g-comp", pasos, { rotar: true });
   document.getElementById("nota-comp").textContent = ceros.length
     ? `No se muestran los conceptos que hoy dan cero: ${ceros.join(", ").replace(/\.$/, "")}.` : "";
@@ -618,7 +636,7 @@ function graficoComposicion() {
 const PANELES = {
   resumen: () => kpis(),
   dolares: () => { tablaDolares(); graficoTC(); graficoBrechas(); },
-  reservas: () => { graficoReservas(); graficoMes(); graficoComposicion(); },
+  reservas: () => { graficoBrutas(); graficoNetas(); graficoMes(); graficoComposicion(); },
 };
 let activa = null;
 function mostrar(id, empujarHistorial = true) {
@@ -697,7 +715,7 @@ function dibujarTodo() {
 document.getElementById("tc-log").addEventListener("change", graficoTC);
 window.addEventListener("resize", () => {
   clearTimeout(window._rz);
-  window._rz = setTimeout(() => PANELES[activa](), 150);
+  window._rz = setTimeout(() => { if (activa) PANELES[activa](); }, 150);   // nada que redibujar si todavía no cargó
 });
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", dibujarTodo);
 if (!D) {

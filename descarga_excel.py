@@ -43,9 +43,9 @@ HOJA_DOLARES = [
 
 HOJA_RESERVAS = [
     ("reservas_brutas", "Reservas Brutas", "MM USD", "BCRA", MM),
-    ("netas_fmi", "Reservas Netas 1 (metodología FMI)", "MM USD", "Cálculo propio", MM),
-    ("netas_ex_bopreal", "Reservas Netas 2 (Netas 1 − venc. BOPREAL 12 meses)", "MM USD", "Cálculo propio", MM),
-    ("netas_ex_bopreal_tesoro", "Reservas Netas 3 (Netas 2 − depósitos del Tesoro)", "MM USD", "Cálculo propio", MM),
+    ("netas_fmi", "RIN 1: reservas internacionales netas (metodología FMI)", "MM USD", "Cálculo propio", MM),
+    ("netas_ex_bopreal", "RIN 2: RIN 1 − venc. BOPREAL 12 meses", "MM USD", "Cálculo propio", MM),
+    ("netas_ex_bopreal_tesoro", "RIN 3: RIN 2 − depósitos del Tesoro", "MM USD", "Cálculo propio", MM),
     ("exceso_deg", "Exceso de DEG", "MM USD", "Cálculo propio", MM1),
     ("swap_china_usd", "Swap con China", "MM USD", "Cálculo propio (BCRA)", MM1),
     ("bis", "BIS", "MM USD", "Carga manual", MM1),

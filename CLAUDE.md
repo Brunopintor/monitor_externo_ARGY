@@ -117,10 +117,10 @@ Decisiones de Bruno, no revertir sin consultar:
 - **Gráficos:**
   - Tipos de cambio (A3500, MEP, CCL, blue; minorista, tarjeta y cripto se prenden desde la leyenda) con la banda sombreada. **Por defecto, últimos 4 años.** Al costado, una tablita con la variación del día y del mes de cada dólar.
   - Brechas MEP, CCL y blue contra el A3500 (4 años por defecto).
-  - Reservas brutas y netas: **el histórico más largo posible** (brutas desde 2003, netas desde 2024).
+  - Reservas: **dos gráficos separados** (27/11/2026), uno de brutas (desde 2003) y otro de RIN 1, 2 y 3 (desde 2024), porque en uno solo la escala de las brutas aplastaba a las netas. Los dos muestran por defecto todo el histórico.
   - Waterfall mensual: cómo se movieron las brutas en el último mes, por factor (ids 78–82). Lo que todavía no tiene factores publicados va a "Sin desagregar".
   - Waterfall de brutas a netas en el último día con netas (Brutas → Netas 1 → BOPREAL 12 meses → Netas 2 → Dep. Tesoro → Netas 3). Omite los conceptos que dan 0 y lo aclara debajo.
-- **Nombres de reservas (27/11/2026):** Reservas Brutas, **Reservas Netas 1** (`netas_fmi`), **Netas 2** (`netas_ex_bopreal`) y **Netas 3** (`netas_ex_bopreal_tesoro`). Las notas al pie están en `NOTAS_NETAS` (`tablero.py`); en Resumen van con asteriscos (y tooltip) y debajo del grupo, y en Reservas, debajo del gráfico.
+- **Nombres de reservas (27/11/2026):** Reservas Brutas y **RIN 1** (`netas_fmi`), **RIN 2** (`netas_ex_bopreal`) y **RIN 3** (`netas_ex_bopreal_tesoro`). RIN = reservas internacionales netas; la aclaración (`NOTA_RIN`) encabeza las notas. Las notas al pie están en `NOTAS_NETAS` (`tablero.py`); en Resumen van con asteriscos (y tooltip) y debajo del grupo, y en Reservas, debajo del gráfico.
 - **Colores de los boxes (27/11/2026):** fondo verde o rojo suave según la **variación del día**, con la flecha de cada variación en su color; en gris si la variación es 0 o falta. El criterio por variable está en `SENTIDO` (`tablero.py`): suba = rojo (`sube_malo`) para dólares, brecha, posición en la banda, DXY y real; suba = verde (`sube_bueno`) para las reservas. La tablita de Dólares colorea igual sus columnas Día y Mes.
 - **Descargas (27/11/2026):**
   - **Excel:** archivo estático generado por `descarga_excel.py`.

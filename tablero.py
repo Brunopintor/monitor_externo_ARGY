@@ -39,16 +39,17 @@ DOLARES = {
 }
 BRECHAS = {"brecha_mep": "MEP", "brecha_ccl": "CCL", "brecha_blue": "Blue"}
 NETAS = {
-    "netas_fmi": "Reservas Netas 1",
-    "netas_ex_bopreal": "Reservas Netas 2",
-    "netas_ex_bopreal_tesoro": "Reservas Netas 3",
+    "netas_fmi": "RIN 1",
+    "netas_ex_bopreal": "RIN 2",
+    "netas_ex_bopreal_tesoro": "RIN 3",
 }
+NOTA_RIN = "RIN: reservas internacionales netas."
 # Notas al pie de cada medida de reservas netas (van con asterisco en los boxes y bajo el gráfico)
 NOTAS_NETAS = {
     "netas_fmi": "Metodología FMI: reservas brutas menos pasivos de corto plazo en moneda extranjera.",
-    "netas_ex_bopreal": "Reservas Netas 1 menos vencimientos de capital e intereses del bono BOPREAL "
+    "netas_ex_bopreal": "RIN 1 menos vencimientos de capital e intereses del bono BOPREAL "
                         "en los próximos 12 meses.",
-    "netas_ex_bopreal_tesoro": "Reservas Netas 2 menos los depósitos en dólares del Tesoro Nacional en el BCRA.",
+    "netas_ex_bopreal_tesoro": "RIN 2 menos los depósitos en dólares del Tesoro Nacional en el BCRA.",
 }
 
 # Color de los boxes y de las variaciones según qué significa que la variable suba:
@@ -251,6 +252,7 @@ def armar_datos() -> dict:
         "waterfall_mes": waterfall_mensual(base),
         "composicion": composicion_netas(rn),
         "notas_netas": [NOTAS_NETAS[k] for k in NETAS],
+        "nota_rin": NOTA_RIN,
         "excel": descarga_excel.NOMBRE,
     }
 

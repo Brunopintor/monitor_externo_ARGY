@@ -159,6 +159,8 @@ Desde el tablero se puede descargar:
 
 ### Medidas de reservas netas
 
-- **Reservas Netas 1:** metodología FMI, reservas brutas menos pasivos de corto plazo en moneda extranjera.
-- **Reservas Netas 2:** Netas 1 menos vencimientos de capital e intereses de BOPREAL en los próximos 12 meses.
-- **Reservas Netas 3:** Netas 2 menos los depósitos en dólares del Tesoro Nacional en el BCRA.
+RIN = reservas internacionales netas.
+
+- **RIN 1:** metodología FMI, reservas brutas menos pasivos de corto plazo en moneda extranjera.
+- **RIN 2:** RIN 1 menos vencimientos de capital e intereses de BOPREAL en los próximos 12 meses.
+- **RIN 3:** RIN 2 menos los depósitos en dólares del Tesoro Nacional en el BCRA.
