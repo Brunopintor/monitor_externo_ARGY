@@ -1,11 +1,11 @@
 {
  "a3500": {
-  "fecha": "2026-11-26",
-  "valor": 1600.6872
+  "fecha": "2026-11-27",
+  "valor": 1600.8752
  },
  "oficial_minorista": {
-  "fecha": "2026-11-26",
-  "valor": 1628.75
+  "fecha": "2026-11-27",
+  "valor": 1628.21
  },
  "banda_inferior": {
   "fecha": "2026-11-27",
@@ -16,64 +16,64 @@
   "valor": 1985.38
  },
  "reservas_brutas": {
-  "fecha": "2026-11-24",
-  "valor": 48819.0
+  "fecha": "2026-11-25",
+  "valor": 48748.0
  },
  "encajes_usd": {
-  "fecha": "2026-11-24",
-  "valor": 17238.0279
+  "fecha": "2026-11-25",
+  "valor": 17310.4865
  },
  "dep_tesoro_me_ars": {
-  "fecha": "2026-11-24",
-  "valor": 214774.0
+  "fecha": "2026-11-25",
+  "valor": 217013.0
  },
  "var_rrii_compra_divisas": {
-  "fecha": "2026-11-20",
+  "fecha": "2026-11-24",
   "valor": 0.0
  },
  "var_rrii_org_internac": {
-  "fecha": "2026-11-20",
-  "valor": -16.6918
+  "fecha": "2026-11-24",
+  "valor": 0.0
  },
  "var_rrii_sector_publico": {
-  "fecha": "2026-11-20",
-  "valor": -0.0763
+  "fecha": "2026-11-24",
+  "valor": -1.6142
  },
  "var_rrii_efectivo_minimo": {
-  "fecha": "2026-11-20",
-  "valor": 21.4326
+  "fecha": "2026-11-24",
+  "valor": -94.0802
  },
  "var_rrii_otros": {
-  "fecha": "2026-11-20",
-  "valor": -79.4795
+  "fecha": "2026-11-24",
+  "valor": -452.2942
  },
  "usd_por_cny": {
-  "fecha": "2026-11-26",
-  "valor": 0.150123
+  "fecha": "2026-11-27",
+  "valor": 0.150256
  },
  "ars_por_cny": {
-  "fecha": "2026-11-26",
-  "valor": 240.422146
+  "fecha": "2026-11-27",
+  "valor": 241.16118
  },
  "usd_por_deg": {
-  "fecha": "2026-11-26",
+  "fecha": "2026-11-27",
   "valor": 1.34174
  },
  "ars_por_deg": {
-  "fecha": "2026-11-26",
-  "valor": 2148.79661
+  "fecha": "2026-11-27",
+  "valor": 2153.4927
  },
  "usd_por_onza_oro": {
-  "fecha": "2026-11-26",
-  "valor": 3567.18
+  "fecha": "2026-11-27",
+  "valor": 3646.82
  },
  "usd_por_brl": {
-  "fecha": "2026-11-26",
-  "valor": 0.173898
+  "fecha": "2026-11-27",
+  "valor": 0.180587
  },
  "ars_por_brl": {
-  "fecha": "2026-11-26",
-  "valor": 278.497522
+  "fecha": "2026-11-27",
+  "valor": 289.841986
  },
  "mep_venta": {
   "fecha": "2026-11-27",
@@ -101,47 +101,47 @@
  },
  "dxy": {
   "fecha": "2026-11-27",
-  "valor": 104.039001
+  "valor": 104.014
  },
  "dep_tesoro_me_usd": {
-  "fecha": "2026-11-24",
-  "valor": 134.906368
+  "fecha": "2026-11-25",
+  "valor": 134.906284
  },
  "brecha_mep": {
-  "fecha": "2026-11-26",
-  "valor": 0.054984
+  "fecha": "2026-11-27",
+  "valor": 0.040931
  },
  "brecha_ccl": {
-  "fecha": "2026-11-26",
-  "valor": 0.104463
+  "fecha": "2026-11-27",
+  "valor": 0.104333
  },
  "brecha_blue": {
-  "fecha": "2026-11-26",
-  "valor": 0.068291
+  "fecha": "2026-11-27",
+  "valor": 0.068166
  },
  "brl_por_usd": {
-  "fecha": "2026-11-26",
-  "valor": 5.750497
+  "fecha": "2026-11-27",
+  "valor": 5.537497
  },
  "canje_ccl_mep": {
   "fecha": "2026-11-27",
   "valor": 0.06091
  },
  "dist_banda_sup": {
-  "fecha": "2026-11-26",
-  "valor": 0.239549
+  "fecha": "2026-11-27",
+  "valor": 0.240184
  },
  "posicion_en_banda": {
-  "fecha": "2026-11-26",
-  "valor": 0.701345
+  "fecha": "2026-11-27",
+  "valor": 0.700914
  },
  "var_d_a3500": {
-  "fecha": "2026-11-26",
-  "valor": -0.004932
+  "fecha": "2026-11-27",
+  "valor": 0.000117
  },
  "var_d_oficial_minorista": {
-  "fecha": "2026-11-26",
-  "valor": -0.002389
+  "fecha": "2026-11-27",
+  "valor": -0.000332
  },
  "var_d_mep_venta": {
   "fecha": "2026-11-27",
@@ -156,27 +156,27 @@
   "valor": 0.0
  },
  "var_d_reservas_brutas": {
-  "fecha": "2026-11-24",
-  "valor": -548.0
+  "fecha": "2026-11-25",
+  "valor": -71.0
  },
  "netas_fmi": {
-  "fecha": "2026-11-24",
-  "valor": 9402.430051
+  "fecha": "2026-11-25",
+  "valor": 9343.304841
  },
  "netas_ex_bopreal": {
-  "fecha": "2026-11-24",
-  "valor": 6639.580051
+  "fecha": "2026-11-25",
+  "valor": 6580.454841
  },
  "netas_ex_bopreal_tesoro": {
-  "fecha": "2026-11-24",
-  "valor": 6504.673683
+  "fecha": "2026-11-25",
+  "valor": 6445.548558
  },
  "liquidas": {
-  "fecha": "2026-11-24",
-  "valor": 26664.423197
+  "fecha": "2026-11-25",
+  "valor": 26776.738347
  },
  "var_vs_meta_rin": {
-  "fecha": "2026-11-24",
-  "valor": 11697.900051
+  "fecha": "2026-11-25",
+  "valor": 11638.774841
  }
 }
